@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Create an account</title>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <form id="accountType-form" action="/accountType" method="POST">
+            <fieldset>
+                <h3>Are you a student or a teacher</h3>
+                <input type="radio" id="teacher" name="account_type" value="teacher" required>
+                <label for="teacher">Teacher</label><br>
+                <input type="radio" id="student" name="account_type" value="student" required>
+                <label for="student">Student</label><br>
+                <br>
+                <button type="submit">Submit</button>
+            </fieldset>
+        </form>
+    </body>
+</html>
