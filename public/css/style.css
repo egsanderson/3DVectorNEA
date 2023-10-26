@@ -1,4 +1,4 @@
-nav {
+nav#mainNav {
     background-color: #333;
 }
 
@@ -12,6 +12,9 @@ ul {
 li {
     float: left;
 }
+#profileButton {
+    float: right; /* This will move the "Profile" button to the right */
+}
 
 li a {
     display: block;
@@ -21,7 +24,47 @@ li a {
     text-decoration: none;
 }
 
-/* Change the link color to #111 (black) on hover */
 li a:hover {
     background-color: #111;
 }
+
+nav#studentNav{
+    background-color: #0a3273;
+}
+
+#classCodeStudent {
+    display: block;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 3px solid #f1f1f1;
+    z-index: 9;
+    max-width: 300px;
+    padding: 10px;
+    background-color: white;
+}
+
+#classCodeStudent input[type="text"] {
+    width: 90%;
+    padding: 15px;
+    margin: 10px 0 22px 0;
+    border: none;
+    background: #f1f1f1;
+}
+
+#classCodeStudent .btn {
+    background-color: #04AA6D;
+    color: white;
+    padding: 16px 20px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 10px;
+    opacity: 0.8;
+}
+
+#classCodeStudent .btn:hover {
+    opacity: 1;
+}
+

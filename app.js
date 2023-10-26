@@ -72,16 +72,18 @@ app.post('/add', (req, res) => {
         console.log(`New ${req.body.account_type} has been added`);
         if (req.body.account_type == "teacher"){
           classCode = createClassCode()
-          db.run('UPDATE Accounts SET Classroom = ? WHERE Email = ?',
-          [classCode, req.body.email], function (err) {
-            if (err) {
-              console.error(err);
-            } else {
-              console.log("classcode added")
-            }
-          });
+          // db.run('UPDATE Accounts SET Classroom = ? WHERE Email = ?',
+          // [classCode, req.body.email], function (err) {
+          //   if (err) {
+          //     console.error(err);
+          //   } else {
+          //     console.log("classcode added")
+          //   }
+          // });
+          setClassCode(classCode, req.body.email)
+
         }
-          res.redirect('/otherForms')
+        res.render('classroomCodePopup.ejs', { email: req.body.email });
       }
     });
   });
@@ -153,10 +155,14 @@ app.post('/delete', function(req, res) {
 
 app.post('/login', function(req, res) {
   email = req.body.email
-  checkPassword(req.body.email, req.body.password)
+  accounttype = studentOrTeacher(email)
+  checkPassword(email, req.body.password)
   .then((result) => {
-    if (result == "true"){
-      res.render('/otherforms', {email});
+    if (result == "true" && accounttype == "student"){
+      res.render('/studentHome', {email});
+    }
+    else if (result == "true"){
+      res.render('/otherForms', {email})
     }
     else {
       console.log(result)
@@ -199,6 +205,13 @@ app.get('/draw-page', (req,res) => {
   res.render('drawVectorGraphic', { errorMessage: req.session.errorMessage });
 })
 
+app.post('/studentAddCode', function(req, res) {
+  console.log(req.body.classCode)
+  classCode = req.body.classCode
+  setClassCode(classCode, req.body.email)
+ res.render("studentHome")
+});
+
 app.get('/close', function(req,res){
   db.close((err) => {
     if (err) {
@@ -221,6 +234,7 @@ function checkPassword(email, password) {
         if (password == row.password) {
           resolve("true");
         } else {
+          console.log(row.password)
           resolve("The password does not matched stored");
         }
       } else {
@@ -240,6 +254,28 @@ function createClassCode(){
   return code;
 }
 
+function setClassCode(classCode, email){
+  db.run('UPDATE Accounts SET Classroom = ? WHERE Email = ?',
+  [classCode, email], function (err) {
+    if (err) {
+      console.error(err);
+    } else {
+      console.log("classcode added")
+    }
+  });
+}
+
+function studentOrTeacher(email){
+  db.get("SELECT AccountType FROM Accounts WHERE Email = ?", [email], function(err,row){
+    if (err) {
+      console.log(err);
+    }
+    else
+    {
+      return row.AccountType
+    }
+  })
+}
 server.listen(3000,function(){ 
     console.log("Server listening on port: 3000");
     console.log("Server is running on 'http://localhost:3000/'");

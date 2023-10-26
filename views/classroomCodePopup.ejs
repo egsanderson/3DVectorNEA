@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/public/css/style.css">
+  </head>
+  <body>
+
+    <div class="form-popup" id="classCodeStudent">
+      <form class="classCodeStudent" action="/studentAddCode" method="POST" onsubmit="closeForm()">
+        <h1>Enter Class Code</h1>
+        <input type="hidden" name="email" value="<%= email %>">
+
+        <input type="text" placeholder="Class Code" name="classCode" required>
+
+        <button type="submit" class="btn">Submit</button>
+        <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+      </form>
+    </div>
+    <script>
+      function closeForm() {
+        document.getElementById("classCodeStudent").style.display = "none";
+      }
+    </script>
+  </body>
+</html>
