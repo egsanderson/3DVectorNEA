@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const questionButton = document.getElementById("questionsButton")
     const progressButton = document.getElementById("progressButton")
     const profileButton = document.getElementById("profileButton")
+    const intersectionButton = document.getElementById("intersectionButton")
   
     if (loginButton) {
       loginButton.addEventListener("click", function () {
@@ -25,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     if (questionButton) {
       questionButton.addEventListener("click", function () {
-        console.log("question buttons")
+        window.location.href = "/vector-questions"
       })
     }
     if (progressButton) {
@@ -37,6 +38,9 @@ document.addEventListener("DOMContentLoaded", function () {
       questionButton.addEventListener("click", function () {
         console.log("profileButton ")
       })
+    }
+    if (intersectionButton) {
+      
     }
   });
 

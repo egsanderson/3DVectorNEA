@@ -89,90 +89,113 @@ app.post('/add', (req, res) => {
   });
 });
 
-app.post('/update', function (req, res) {
-  if (req.body.password1 != req.body.password2){
-    console.log("No Match with new passwords")
-    return res.send("No Match with new passwords")
-  }
-  else if (req.body.oldpassword == req.body.password1 || req.body.oldpassword == req.body.password2) {
-    console.log("Isn't a new password")
-    return res.send("Isn't a new password")
-  }
-  else {
-    checkPassword(req.body.email, req.body.oldpassword)
-    .then((result) => {
-      if (result == "true") {
-        db.get('UPDATE Accounts SET Password = ? WHERE Email = ?', [req.body.password1, req.body.email], function(err) {
-          if (err) {
-            return console.log(err.message);
-          }
-          else {
-            console.log("Updated")
-            res.send("Updated")
-          }
-        });
-      }
-      else {
-        console.log(result)
-        res.send(result)
-      }
-    })
-    .catch((error) => {
-      console.log(error.message);
-    });
-  }
+// app.post('/update', function (req, res) {
+//   if (req.body.password1 != req.body.password2){
+//     console.log("No Match with new passwords")
+//     return res.send("No Match with new passwords")
+//   }
+//   else if (req.body.oldpassword == req.body.password1 || req.body.oldpassword == req.body.password2) {
+//     console.log("Isn't a new password")
+//     return res.send("Isn't a new password")
+//   }
+//   else {
+//     checkPassword(req.body.email, req.body.oldpassword)
+//     .then((result) => {
+//       if (result == "true") {
+//         db.get('UPDATE Accounts SET Password = ? WHERE Email = ?', [req.body.password1, req.body.email], function(err) {
+//           if (err) {
+//             return console.log(err.message);
+//           }
+//           else {
+//             console.log("Updated")
+//             res.send("Updated")
+//           }
+//         });
+//       }
+//       else {
+//         console.log(result)
+//         res.send(result)
+//       }
+//     })
+//     .catch((error) => {
+//       console.log(error.message);
+//     });
+//   }
 
-});
+// });
 
-app.post('/delete', function(req, res) {
-  if (req.body.password1 != req.body.password2){
-    console.log("These passwords dont match");
-    return res.send("These passwords dont match");
-  }
-  else{
-    checkPassword(req.body.email, req.body.password1)
-    .then((result) => {
-      if (result == "true") {
-        db.get('DELETE FROM Accounts WHERE Email = ?', [req.body.email], function(err) {
-          if (err) {
-            return console.log(err.message);
-          }
-          else {
-            console.log("Updated")
-            res.send("Updated")
-          }
-        });
+// app.post('/delete', function(req, res) {
+//   if (req.body.password1 != req.body.password2){
+//     console.log("These passwords dont match");
+//     return res.send("These passwords dont match");
+//   }
+//   else{
+//     checkPassword(req.body.email, req.body.password1)
+//     .then((result) => {
+//       if (result == "true") {
+//         db.get('DELETE FROM Accounts WHERE Email = ?', [req.body.email], function(err) {
+//           if (err) {
+//             return console.log(err.message);
+//           }
+//           else {
+//             console.log("Updated")
+//             res.send("Updated")
+//           }
+//         });
+//       } else {
+//         console.log(result)
+//         res.send(result)
+//       }
+//     })
+//     .catch((error) => {
+//       console.log(error.message)
+//     });
+//   };
+// });
+
+// app.post('/login', function(req, res) {
+//   errorMessage = null
+//   email = req.body.email
+//   password = req.body.password
+//   accounttype = studentOrTeacher(email)
+//   match = checkPassword(email, password)
+//   if (match == true){
+//     if (accounttype == "student"){
+//       res.render('/studentHome', {email});
+//     }
+//     if (accounttype == "teacher"){
+//       res.render('/otherForms', {email})
+//     }
+//   }
+//   else {
+//     res.render('login', {errorMessage : "No Match"})
+
+//   }
+// });
+
+app.post('/login', (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  studentOrTeacher(email)
+    .then((accounttype) => checkPassword(email, password).then((match) => ({ accounttype, match })))
+    .then(({ accounttype, match }) => {
+      if (match) {
+        if (accounttype === 'student') {
+          res.render('studentHome', { email });
+        } else if (accounttype === 'teacher') {
+          res.render('otherForms', { email });
+        } else {
+          res.render('login', { errorMessage: 'No Match' });
+        }
       } else {
-        console.log(result)
-        res.send(result)
+        res.render('login', { errorMessage: 'No Match' });
       }
     })
-    .catch((error) => {
-      console.log(error.message)
+    .catch((err) => {
+      console.error(err);
+      res.render('login', { errorMessage: 'An error occurred' });
     });
-  };
-});
-
-app.post('/login', function(req, res) {
-  email = req.body.email
-  accounttype = studentOrTeacher(email)
-  checkPassword(email, req.body.password)
-  .then((result) => {
-    if (result == "true" && accounttype == "student"){
-      res.render('/studentHome', {email});
-    }
-    else if (result == "true"){
-      res.render('/otherForms', {email})
-    }
-    else {
-      console.log(result)
-      req.session.errorMessage = result
-      res.redirect('/login-page');
-    }
-  })
-  .catch((error) => {
-    console.log(error.message);
-  })
 });
 
 app.get('/login-page', (req, res) => {
@@ -212,6 +235,10 @@ app.post('/studentAddCode', function(req, res) {
  res.render("studentHome")
 });
 
+app.get('/vector-questions', (req, res) => {
+  res.render("vectorQuesTemplate")
+})
+
 app.get('/close', function(req,res){
   db.close((err) => {
     if (err) {
@@ -223,22 +250,37 @@ app.get('/close', function(req,res){
   });
 });
   
-function checkPassword(email, password) {
+// function checkPassword(email, password) {
+//   var match = false;
+//   db.get("SELECT Password FROM Accounts WHERE Email = ?", [email], function(err, row) {
+//     if (err) {
+//       console.log(err);
+//     } else {
+//       console.log(password)
+//       console.log(row.Password)
+//       if (password == row.Password){
+//         match = true;
+//       }
+//       else {
+//         match = false
+//       }
+//     }
+//   })
+//   console.log(match)
+//   return match;
+// }
 
+function checkPassword(email, password) {
   return new Promise((resolve, reject) => {
-    db.get('SELECT Password FROM Accounts WHERE Email = ?', [email], function (err, row) {
+    db.get('SELECT Password FROM Accounts WHERE Email = ?', [email], (err, row) => {
       if (err) {
         reject(err);
-      }
-      if (row) {
-        if (password == row.password) {
-          resolve("true");
-        } else {
-          console.log(row.password)
-          resolve("The password does not matched stored");
-        }
       } else {
-        resolve("Email does not exist in database");
+        if (row && password === row.Password) {
+          resolve(true);
+        } else {
+          resolve(false);
+        }
       }
     });
   });
@@ -265,17 +307,35 @@ function setClassCode(classCode, email){
   });
 }
 
-function studentOrTeacher(email){
-  db.get("SELECT AccountType FROM Accounts WHERE Email = ?", [email], function(err,row){
-    if (err) {
-      console.log(err);
-    }
-    else
-    {
-      return row.AccountType
-    }
-  })
+// function studentOrTeacher(email){
+//   var type = "";
+//   db.get("SELECT AccountType FROM Accounts WHERE Email = ?", [email], function(err, row) {
+//     if (err) {
+//       console.log(err);
+//     } else {
+//       type = row.AccountType
+//       console.log(row.AccountType);
+//     }
+//   })
+//   return type;
+// }
+
+function studentOrTeacher(email) {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT AccountType FROM Accounts WHERE Email = ?', [email], (err, row) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(row ? row.AccountType : null);
+      }
+    });
+  });
 }
+
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 server.listen(3000,function(){ 
     console.log("Server listening on port: 3000");
     console.log("Server is running on 'http://localhost:3000/'");
