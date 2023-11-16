@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <link rel="stylesheet" href="../public/css/style.css">
     <script src="../public/js/main.js"></script>
     <link rel="icon" type="image/x-icon" href="../public/images/favicon.png">
-    <title>3D Vector learning tool</title>
+    <title>Vector Calculation</title>
 </head>
 <body>
     <nav id="studentNav">
@@ -13,8 +12,17 @@
             <li><a href="#" id="questionsButton">Questions</a></li>
             <li><a href="#" id="progressButton">Progress</a></li>
             <li><a href="#" id="drawButton">Draw Vector</a></li>
-            <li><a href="#" id="profileButton">Profile - <%= email %></a></li>
+            <li><a href="#" id="profileButton">Profile</a></li>
         </ul>
     </nav>
+
+    <h1 id="vectorQuestionsHeader">Vector Questions</h1>
+    <div id="center-frame">
+        <div id="button-container">
+            <button id="intersectionButton">Intersection</button>
+            <button id="distanceButton">Distance</button>
+            <button id="planesButton">Planes</button>
+        </div>
+    </div>
 </body>
 </html>

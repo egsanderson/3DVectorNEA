@@ -70,7 +70,6 @@ nav#studentNav{
 
 
 
-
 #center-frame {
     display: inline-block;
     border: 1px solid #000;
@@ -82,13 +81,14 @@ nav#studentNav{
 
 #button-container {
     display: flex;
+    align-content: center;
     justify-content: space-around;
     background-color: #e0e0e0;
     padding: 10px;
     border-radius: 10px;
 }
 
-#intersection-button {
+#intersectionButton {
     background-color: blue;
     color: white;
     padding: 10px 20px;
@@ -97,7 +97,7 @@ nav#studentNav{
     text-decoration: none;
 }
 
-#distance-button {
+#distanceButton {
     background-color: blue;
     color: white;
     padding: 10px 20px;
@@ -106,7 +106,7 @@ nav#studentNav{
     text-decoration: none;
 }
 
-#planes-button {
+#planesButton {
     background-color: blue;
     color: white;
     padding: 10px 20px;

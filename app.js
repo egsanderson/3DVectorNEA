@@ -72,16 +72,7 @@ app.post('/add', (req, res) => {
         console.log(`New ${req.body.account_type} has been added`);
         if (req.body.account_type == "teacher"){
           classCode = createClassCode()
-          // db.run('UPDATE Accounts SET Classroom = ? WHERE Email = ?',
-          // [classCode, req.body.email], function (err) {
-          //   if (err) {
-          //     console.error(err);
-          //   } else {
-          //     console.log("classcode added")
-          //   }
-          // });
           setClassCode(classCode, req.body.email)
-
         }
         res.render('classroomCodePopup.ejs', { email: req.body.email });
       }
@@ -232,12 +223,16 @@ app.post('/studentAddCode', function(req, res) {
   console.log(req.body.classCode)
   classCode = req.body.classCode
   setClassCode(classCode, req.body.email)
- res.render("studentHome")
+ res.render("studentHome", {email : req.body.email})
 });
 
 app.get('/vector-questions', (req, res) => {
-  res.render("vectorQuesTemplate")
-})
+  res.render("vectorQuestionPage",)
+});
+
+app.get('/intersection-questions', (req, res) => {
+  res.render("intersectionQuestion",)
+});
 
 app.get('/close', function(req,res){
   db.close((err) => {

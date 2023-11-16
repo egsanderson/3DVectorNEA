@@ -30,17 +30,19 @@ document.addEventListener("DOMContentLoaded", function () {
       })
     }
     if (progressButton) {
-      questionButton.addEventListener("click", function () {
+      progressButton.addEventListener("click", function () {
         console.log("progressButton ")
       })
     }
     if (profileButton) {
-      questionButton.addEventListener("click", function () {
+      profileButton.addEventListener("click", function () {
         console.log("profileButton ")
       })
     }
     if (intersectionButton) {
-      
+      intersectionButton.addEventListener("click", function () {
+        window.location.href = "/intersection-questions"
+      })
     }
   });
 
