@@ -1,5 +1,3 @@
-// public/main.js
-
 document.addEventListener("DOMContentLoaded", function () {
     const loginButton = document.getElementById("loginButton");
     const createAccountButton = document.getElementById("createAccountButton")

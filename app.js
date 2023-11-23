@@ -9,6 +9,7 @@ var bodyParser = require('body-parser');
 var helmet = require('helmet');
 var rateLimit = require("express-rate-limit");
 const three = require('three');
+const vectorCalculation = require('./public/js/vector-calculation.js');
 
 var app = express();
 var server = http.createServer(app);
@@ -231,7 +232,21 @@ app.get('/vector-questions', (req, res) => {
 });
 
 app.get('/intersection-questions', (req, res) => {
-  res.render("intersectionQuestion",)
+  const { vector1, vector2, coordinates} = vectorCalculation.getIntersectingVectorsandCoordinates();
+  const result = null
+  res.render("intersectionQuestion", { vector1, vector2, coordinates, result})
+});
+
+app.post("/intersection-check-answer", function(req, res) {
+  const userInput = req.body.userInput;
+  const vector1 = req.body.vector1;
+  const vector2 = req.body.vector2;
+  const coordinates = req.body.coordinates;
+console.log(userInput)
+console.log(coordinates)
+  const result = userInput === coordinates ? 'Correct!' : 'Incorrect!';
+
+  res.render("intersectionQuestion", { vector1, vector2, coordinates, result})
 });
 
 app.get('/close', function(req,res){

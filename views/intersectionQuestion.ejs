@@ -16,5 +16,24 @@
             </ul>
         </nav>
         <h1>Intersection Questions</h1>
+            <p><%= vector1 %></p>
+
+             <p><%= vector2 %></p>
+
+             <p ><%= coordinates %></p>
+
+             <form action="/intersection-check-answer" method="POST">
+                <input type="hidden" id="vector1" name="vector1" value="<%= vector1 %>">
+                <input type="hidden" id="vector2" name="vector2" value="<%= vector2 %>">
+                <input type="hidden" id="coordinates" name="coordinates" value="<%= coordinates %>">
+
+                <label for="userInput">Enter Coordinates:</label>
+                <input type="text" id="userInput" name="userInput" required>
+                <button type="submit">Check Answer</button>
+            </form>
+
+            <% if (result) { %>
+                <p><%= result %></p>
+            <% } %>
     </body>
 </html>
