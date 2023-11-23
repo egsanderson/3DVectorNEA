@@ -19,6 +19,7 @@ const limiter = rateLimit({
   max: 100 // limit each IP to 100 requests per windowMs
 });
 
+let currentUserEmail = null;
 app.use(express.static("public"));
 
 app.use(session({
@@ -71,6 +72,9 @@ app.post('/add', (req, res) => {
         }
       } else {
         console.log(`New ${req.body.account_type} has been added`);
+        req.session.currentUserEmail = email; 
+
+        ProgessDatabase(req.body.email)
         if (req.body.account_type == "teacher"){
           classCode = createClassCode()
           setClassCode(classCode, req.body.email)
@@ -168,11 +172,13 @@ app.post('/add', (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  currentUserEmail = email;
 
   studentOrTeacher(email)
     .then((accounttype) => checkPassword(email, password).then((match) => ({ accounttype, match })))
     .then(({ accounttype, match }) => {
       if (match) {
+        req.session.currentUserEmail = email;
         if (accounttype === 'student') {
           res.render('studentHome', { email });
         } else if (accounttype === 'teacher') {
@@ -206,14 +212,6 @@ app.post('/accountType', function(req, res) {
     res.render('createAccount',{ errorMessage: req.session.errorMessage, accountType });
 });
 
-app.get('/otherforms', (req,res) => {
-  if (req.session) {
-    const email = req.session.email;
-    res.render('otherForms', { email });
-  } else {
-    res.send('Session not found. Please log in.');
-  }
-})
 
 app.get('/draw-page', (req,res) => {
   req.session.errorMessage = req.session.errorMessage || null;
@@ -223,30 +221,42 @@ app.get('/draw-page', (req,res) => {
 app.post('/studentAddCode', function(req, res) {
   console.log(req.body.classCode)
   classCode = req.body.classCode
-  setClassCode(classCode, req.body.email)
- res.render("studentHome", {email : req.body.email})
+  const email = req.session.currentUserEmail; // Retrieve email from the session
+
+  setClassCode(classCode, email)
+ res.render("studentHome", {email : email})
 });
 
 app.get('/vector-questions', (req, res) => {
-  res.render("vectorQuestionPage",)
+  const email = req.session.currentUserEmail;
+  res.render("vectorQuestionPage", { email });
 });
 
 app.get('/intersection-questions', (req, res) => {
   const { vector1, vector2, coordinates} = vectorCalculation.getIntersectingVectorsandCoordinates();
   const result = null
-  res.render("intersectionQuestion", { vector1, vector2, coordinates, result})
+  const email = req.session.currentUserEmail;
+  res.render("intersectionQuestion", {email, vector1, vector2, coordinates, result})
 });
 
 app.post("/intersection-check-answer", function(req, res) {
+  const email = req.session.currentUserEmail;
   const userInput = req.body.userInput;
   const vector1 = req.body.vector1;
   const vector2 = req.body.vector2;
   const coordinates = req.body.coordinates;
-console.log(userInput)
-console.log(coordinates)
+  const dbName = "Prog_Intersection";
+  // console.log(userInput)
+  // console.log(coordinates)
   const result = userInput === coordinates ? 'Correct!' : 'Incorrect!';
-
-  res.render("intersectionQuestion", { vector1, vector2, coordinates, result})
+  if (result == 'Correct!'){
+    var check = true;
+  }
+  else{
+    var check = false;
+  }
+  updateProgTables(dbName, email, check)
+  res.render("intersectionQuestion", { email, vector1, vector2, coordinates, result})
 });
 
 app.get('/close', function(req,res){
@@ -279,6 +289,54 @@ app.get('/close', function(req,res){
 //   console.log(match)
 //   return match;
 // }
+
+function ProgessDatabase(email) {
+  const databases = ["Progress", "Prog_Intersection", "Prog_Distance", "Prog_Planes"];
+
+  for (let i = 0; i < databases.length; i++) {
+    const tableName = databases[i];
+
+    db.serialize(() => {
+      db.run(`INSERT INTO ${tableName}(Email, QuestionsAttempted, CorrectAnswers) VALUES (?, ?, ?)`, [email, 0, 0], function(err) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log(`${tableName} Database successful`);
+        }
+      });
+    });
+  }
+}
+
+function updateProgTables(tableName, email, correct) {
+  const databases = ["Progress", tableName];
+  const questionsAttempted = [0, 0];
+  const correctAnswers = [0, 0];
+
+  for (var i = 0; i <= 1; i++) {
+    const tableName = databases[i];
+    db.serialize(() => {
+      db.get(`SELECT QuestionsAttempted, CorrectAnswers FROM ${tableName} WHERE email = ?`, [email], (err, row) => {
+        if (err) {
+          console.error(err.message);
+          return;
+        }
+        if (row) {
+          questionsAttempted[i] = row.QuestionsAttempted + 1;
+          correctAnswers[i] = row.CorrectAnswers + (correct ? 1 : 0);
+
+          db.run(`UPDATE ${tableName} SET QuestionsAttempted = ?, CorrectAnswers = ? WHERE email = ?`, [questionsAttempted[i], correctAnswers[i], email], (err) => {
+            if (err) {
+              console.error(err.message);
+            } else {
+              console.log(`Updated ${tableName} for email ${email}`);
+            }
+          });
+        }
+      });
+    });
+  }
+}
 
 function checkPassword(email, password) {
   return new Promise((resolve, reject) => {
@@ -340,10 +398,6 @@ function studentOrTeacher(email) {
       }
     });
   });
-}
-
-function getRandomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 server.listen(3000,function(){ 

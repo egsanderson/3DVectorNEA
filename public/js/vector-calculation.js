@@ -44,8 +44,6 @@ function doVectorsIntersect(vector1, vector2) {
         var PandQ = findPandQ(equs);
         if (checkPandQs(PandQ, equs)) {
            console.log("p = " + PandQ[0] + " & q = " + PandQ[1]);
-            //var intersection = findIntersection(vector1Direction, vector1Position, vector2Direction, vector2Position, PandQ);
-            //outputIntersection(intersection);
             return true;
         } else {
             console.log("These vectors are skew.");
@@ -153,12 +151,6 @@ function calculateCoordinates(vector1, vector2) {
         PandQ
     );
 
-//     return {
-//         x: intersection[0][0],
-//         y: intersection[0][1],
-//         z: intersection[0][2]
-//     };
-
     for (var i = 0; i <=2; i++){
         if (typeof (intersection[0][i]) === 'number' && !Number.isInteger(intersection[0][i])) {
             intersection[0][i] = parseFloat(intersection[0][i].toFixed(2));
@@ -186,9 +178,4 @@ module.exports = {
         return { vector1: vector1Equation, vector2: vector2Equation, coordinates: coordinates };
     },
 
-    
-    // calculateCoordinates: function(vector1, vector2) {
-    //     //PLACE HOLDER
-    //     return { x: 0, y: 0, z: 0 };
-    // }
 };
