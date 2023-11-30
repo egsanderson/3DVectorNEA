@@ -115,3 +115,20 @@ nav#studentNav{
     text-decoration: none;
 }
 
+#repeatButton-Yes {
+    background-color: green;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+#repeatButton-No {
+    background-color: red;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+}
