@@ -6,9 +6,9 @@
         <meta charset="UTF-8">
     </head>
     <body>
-        <% if (errorMessage) { %>
-            <p style="color: red;"><%= errorMessage %></p>
-        <% } %>
+        [/ if (errorMessage) { /]
+            <p style="color: red;">[/- errorMessage /]</p>
+        [/ } /]
         <form class="login-form" action="/login" method="POST">
             <fieldset>
                 <h3>Login</h3>

@@ -9,6 +9,14 @@ var bodyParser = require('body-parser');
 var helmet = require('helmet');
 var rateLimit = require("express-rate-limit");
 const three = require('three');
+// const Chart = require('chart.js');
+
+const ejs = require("ejs");
+
+ejs.delimiter = '/';
+ejs.openDelimiter = '[';
+ejs.closeDelimiter = ']';
+
 const vectorCalculation = require('./public/js/vector-calculation.js');
 
 var app = express();
@@ -50,6 +58,11 @@ app.use('/public', express.static(path.join(__dirname, 'public'), {
     }
   },
 }));
+
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net");
+  next();
+});
   
 app.post('/add', (req, res) => {
   const email = req.body.email;
@@ -289,6 +302,35 @@ app.get('/close', function(req,res){
 //   console.log(match)
 //   return match;
 // }
+
+
+app.get('/progress', (req, res) => {
+  const email = req.session.currentUserEmail;
+  console.log(email)
+  var totalQuestions = 0
+  var correctAnswers = 0
+  var incorrectAnswers = 0;
+
+  //in future do all four questions
+  db.serialize(() => {
+    db.get(`SELECT QuestionsAttempted, CorrectAnswers FROM Progress WHERE email = ?`, [email], (err, row) => {
+      if (err) {
+        console.log(err);
+      }
+      if (row) {
+        totalQuestions = row.QuestionsAttempted;
+        correctAnswers = row.CorrectAnswers;
+        incorrectAnswers = totalQuestions - correctAnswers;
+        // console.log("Total Questions:", totalQuestions);
+        // console.log("Correct Answers:", correctAnswers);
+        // console.log("Incorrect Answers:", incorrectAnswers);
+        res.render('progressPage', { correctAnswers, incorrectAnswers ,email });
+      }
+    });
+  });
+
+});
+
 
 function ProgessDatabase(email) {
   const databases = ["Progress", "Prog_Intersection", "Prog_Distance", "Prog_Planes"];

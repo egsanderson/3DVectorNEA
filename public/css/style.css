@@ -132,3 +132,14 @@ nav#studentNav{
     cursor: pointer;
     text-decoration: none;
 }
+
+.pieChart-container {
+    width: 50%;
+    height: 50%;
+    margin: auto;
+}
+
+#pieChart {
+    max-width: 100%;
+    height: auto;
+}

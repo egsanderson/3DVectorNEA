@@ -161,7 +161,6 @@ function calculateCoordinates(vector1, vector2) {
     return formattedCoordinates;
 }
 
-
 module.exports = {
     getIntersectingVectorsandCoordinates: function() {
         let vector1, vector2;

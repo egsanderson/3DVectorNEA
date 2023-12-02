@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Page</title>
+    <link rel="stylesheet" href="../public/css/style.css">
+    <!-- <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net"> -->
+    
+    <script src="../public/js/main.js"></script>
+
+</head>
+
+
+<body>
+
+    <nav id="studentNav">
+        <ul>
+            <li><a href="#" id="questionsButton">Questions</a></li>
+            <li><a href="#" id="progressButton">Progress</a></li>
+            <li><a href="#" id="drawButton">Draw Vector</a></li>
+            <li><a href="#" id="profileButton">Profile - [/- email /]</a></li>
+        </ul>
+    </nav>
+
+    <div class="pieChart-container">
+        <h1>Progress Pie Chart</h1>
+        <div>
+            <canvas id="pieChart" width="400" height="400"></canvas>
+        </div>
+    </div>
+    <!-- <p>Correct Answers: <span id="correctAnswers">[/- correctAnswers /]</span></p>
+    <p>Incorrect Answers: <span id="incorrectAnswers">[/- incorrectAnswers /]</span></p> -->
+
+    <script
+    src="https://cdn.jsdelivr.net/npm/chart.js@4.0.1/dist/chart.umd.min.js"></script>
+    <script>
+        var correctAnswers = [/- correctAnswers /]
+        var incorrectAnswers = [/- incorrectAnswers /]
+        new Chart(document.getElementById("pieChart"), {
+            type: 'pie',
+            data: {
+                labels: ["Correct Answers", "Incorrect Answers"],
+                datasets: [{
+                    backgroundColor: ["#008000", "#FF0000"],
+                    data: [correctAnswers, incorrectAnswers]
+                }]
+            },
+            options: {
+                title: {
+                    display: true,
+                    text: 'ProgressPieChart'
+                }
+            }
+        });
+    </script>
+</body>
+</html>

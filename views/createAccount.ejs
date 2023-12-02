@@ -6,14 +6,14 @@
         <meta charset="UTF-8">
     </head>
     <body>
-        <% if (errorMessage) { %>
-          <p style="color: red;"><%= errorMessage %></p>
-        <% } %>
+        [/ if (errorMessage) { /]
+          <p style="color: red;">[/- errorMessage /]</p>
+        [/ } /]
         <div id="registration-form">
           <form id="registration-form" action="/add" method="POST">
             <fieldset>
-              <h3>Create a <%= accountType %> Account</h3> 
-              <input type="hidden" name="account_type" value="<%= accountType %>">
+              <h3>Create a [/- accountType /] Account</h3> 
+              <input type="hidden" name="account_type" value="[/- accountType /]">
               <label>First Name</label>
               <input type="text" id="forename" name="forename" required>
               <br><br>
