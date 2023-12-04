@@ -225,7 +225,6 @@ app.post('/accountType', function(req, res) {
     res.render('createAccount',{ errorMessage: req.session.errorMessage, accountType });
 });
 
-
 app.get('/draw-page', (req,res) => {
   req.session.errorMessage = req.session.errorMessage || null;
   res.render('drawVectorGraphic', { errorMessage: req.session.errorMessage });
@@ -304,32 +303,71 @@ app.get('/close', function(req,res){
 // }
 
 
+// app.get('/progress', (req, res) => {
+//   const email = req.session.currentUserEmail;
+//   console.log(email)
+//   var totalQuestions = 0
+//   var correctAnswers = 0
+//   var incorrectAnswers = 0;
+
+//   //in future do all four questions
+//   db.serialize(() => {
+//     db.get(`SELECT QuestionsAttempted, CorrectAnswers FROM Progress WHERE email = ?`, [email], (err, row) => {
+//       if (err) {
+//         console.log(err);
+//       }
+//       if (row) {
+//         totalQuestions = row.QuestionsAttempted;
+//         correctAnswers = row.CorrectAnswers;
+//         incorrectAnswers = totalQuestions - correctAnswers;
+//         res.render('progressPage', { correctAnswers, incorrectAnswers ,email });
+//       }
+//     });
+//   });
+
+// });
+
 app.get('/progress', (req, res) => {
   const email = req.session.currentUserEmail;
-  console.log(email)
-  var totalQuestions = 0
-  var correctAnswers = 0
-  var incorrectAnswers = 0;
+  console.log(email);
 
-  //in future do all four questions
-  db.serialize(() => {
-    db.get(`SELECT QuestionsAttempted, CorrectAnswers FROM Progress WHERE email = ?`, [email], (err, row) => {
+  const progressData = []; 
+
+  const tables = ["Progress", "Prog_Intersection", "Prog_Distance", "Prog_Planes"];
+
+  function getProgressData(table, callback) {
+    db.get(`SELECT QuestionsAttempted, CorrectAnswers FROM ${table} WHERE email = ?`, [email], (err, row) => {
       if (err) {
         console.log(err);
-      }
-      if (row) {
-        totalQuestions = row.QuestionsAttempted;
-        correctAnswers = row.CorrectAnswers;
-        incorrectAnswers = totalQuestions - correctAnswers;
-        // console.log("Total Questions:", totalQuestions);
-        // console.log("Correct Answers:", correctAnswers);
-        // console.log("Incorrect Answers:", incorrectAnswers);
-        res.render('progressPage', { correctAnswers, incorrectAnswers ,email });
+        callback(err, null);
+      } else {
+        if (row) {
+          const totalQuestions = row.QuestionsAttempted;
+          const correctAnswers = row.CorrectAnswers;
+          const incorrectAnswers = totalQuestions - correctAnswers;
+          progressData.push({ table, correctAnswers, incorrectAnswers });
+        }
+        callback(null, row);
       }
     });
-  });
+  }
 
+  async function getAllProgressData() {
+    try {
+      for (const table of tables) {
+        await new Promise((resolve) => {
+          getProgressData(table, resolve);
+        });
+      }
+      res.render('progressPage', { progressData, email });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  getAllProgressData();
 });
+
 
 
 function ProgessDatabase(email) {

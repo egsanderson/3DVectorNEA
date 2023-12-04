@@ -6,14 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Progress Page</title>
     <link rel="stylesheet" href="../public/css/style.css">
-    <!-- <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net"> -->
-    
     <script src="../public/js/main.js"></script>
 
 </head>
-
-
-<body>
+<body id="progressPage">
 
     <nav id="studentNav">
         <ul>
@@ -24,36 +20,72 @@
         </ul>
     </nav>
 
-    <div class="pieChart-container">
-        <h1>Progress Pie Chart</h1>
-        <div>
-            <canvas id="pieChart" width="400" height="400"></canvas>
+    <div class="chart-container">
+        <div class="chart-item">
+            <h1>Overview</h1>
+            <canvas id="OverviewPieChart" width="200" height="200"></canvas>
+        </div>
+        <div class="chart-item">
+            <h1>Intersection Progress</h1>
+            <canvas id="IntersectionPieChart" width="200" height="200"></canvas>
+        </div>
+        <div class="chart-item">
+            <h1>Distance Progress</h1>
+            <canvas id="DistancePieChart" width="200" height="200"></canvas>
+        </div>
+        <div class="chart-item">
+            <h1>Planes Progress</h1>
+            <canvas id="PlanesPieChart" width="200" height="200"></canvas>
         </div>
     </div>
-    <!-- <p>Correct Answers: <span id="correctAnswers">[/- correctAnswers /]</span></p>
-    <p>Incorrect Answers: <span id="incorrectAnswers">[/- incorrectAnswers /]</span></p> -->
+
 
     <script
     src="https://cdn.jsdelivr.net/npm/chart.js@4.0.1/dist/chart.umd.min.js"></script>
     <script>
-        var correctAnswers = [/- correctAnswers /]
-        var incorrectAnswers = [/- incorrectAnswers /]
-        new Chart(document.getElementById("pieChart"), {
-            type: 'pie',
-            data: {
-                labels: ["Correct Answers", "Incorrect Answers"],
-                datasets: [{
-                    backgroundColor: ["#008000", "#FF0000"],
-                    data: [correctAnswers, incorrectAnswers]
-                }]
-            },
-            options: {
-                title: {
-                    display: true,
-                    text: 'ProgressPieChart'
-                }
-            }
+
+        var progressData = [/- JSON.stringify(progressData) /];
+
+        var dataArrays = progressData.map(function (data) {
+            return {
+                table: data.table,
+                correctAnswers: data.correctAnswers,
+                incorrectAnswers: data.incorrectAnswers
+            };
         });
+
+        var tableDataArray = [
+            ['Progress', 'OverviewPieChart'],
+            ['Prog_Intersection', 'IntersectionPieChart'],
+            ['Prog_Distance', 'DistancePieChart'],
+            ['Prog_Planes', 'PlanesPieChart']
+        ];
+
+        for(var i = 0; i <= 3; i++){
+            var progressEntry = dataArrays.find(function (entry) {
+            return entry.table === tableDataArray[i][0];
+            });
+            var progressCorrectAnswers = progressEntry ? progressEntry.correctAnswers : 0;
+            var progressIncorrectAnswers = progressEntry ? progressEntry.incorrectAnswers : 0;
+            new Chart(document.getElementById(tableDataArray[i][1]), {
+                type: 'pie',
+                data: {
+                    labels: ["Correct Answers", "Incorrect Answers"],
+                    datasets: [{
+                        backgroundColor: ["#008000", "#FF0000"],
+                        data: [progressCorrectAnswers, progressIncorrectAnswers]
+                    }]
+                },
+                options: {
+                    title: {
+                        display: true,
+                        text: 'ProgressPieChart'
+                    }
+                }
+            });
+        }
+
+
     </script>
 </body>
 </html>
