@@ -1,9 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Your button event listener code
   const loginButton = document.getElementById("loginButton");
   const createAccountButton = document.getElementById("createAccountButton");
   const drawButton = document.getElementById("drawButton");
-  const questionButton = document.getElementById("questionsButton");
+  //const questionButton = document.getElementById("questionsButton");
   const progressButton = document.getElementById("progressButton");
   const profileButton = document.getElementById("profileButton");
   const intersectionButton = document.getElementById("intersectionButton");
@@ -23,11 +22,11 @@ document.addEventListener("DOMContentLoaded", function () {
       window.location.href = "/draw-page";
     });
   }
-  if (questionButton) {
-    questionButton.addEventListener("click", function () {
-      window.location.href = "/vector-questions";
-    });
-  }
+  // if (questionButton) {
+  //   questionButton.addEventListener("click", function () {
+  //     window.location.href = "/vector-questions";
+  //   });
+  // }
   if (progressButton) {
     progressButton.addEventListener("click", function () {
       window.location.href = "/progress";

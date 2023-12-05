@@ -226,8 +226,9 @@ app.post('/accountType', function(req, res) {
 });
 
 app.get('/draw-page', (req,res) => {
+  var email = req.session.currentUserEmail
   req.session.errorMessage = req.session.errorMessage || null;
-  res.render('drawVectorGraphic', { errorMessage: req.session.errorMessage });
+  res.render('drawVectorGraphic', { errorMessage: req.session.errorMessage, email} );
 })
 
 app.post('/studentAddCode', function(req, res) {
@@ -281,51 +282,6 @@ app.get('/close', function(req,res){
     res.send('Database connection successfully closed');
   });
 });
-  
-// function checkPassword(email, password) {
-//   var match = false;
-//   db.get("SELECT Password FROM Accounts WHERE Email = ?", [email], function(err, row) {
-//     if (err) {
-//       console.log(err);
-//     } else {
-//       console.log(password)
-//       console.log(row.Password)
-//       if (password == row.Password){
-//         match = true;
-//       }
-//       else {
-//         match = false
-//       }
-//     }
-//   })
-//   console.log(match)
-//   return match;
-// }
-
-
-// app.get('/progress', (req, res) => {
-//   const email = req.session.currentUserEmail;
-//   console.log(email)
-//   var totalQuestions = 0
-//   var correctAnswers = 0
-//   var incorrectAnswers = 0;
-
-//   //in future do all four questions
-//   db.serialize(() => {
-//     db.get(`SELECT QuestionsAttempted, CorrectAnswers FROM Progress WHERE email = ?`, [email], (err, row) => {
-//       if (err) {
-//         console.log(err);
-//       }
-//       if (row) {
-//         totalQuestions = row.QuestionsAttempted;
-//         correctAnswers = row.CorrectAnswers;
-//         incorrectAnswers = totalQuestions - correctAnswers;
-//         res.render('progressPage', { correctAnswers, incorrectAnswers ,email });
-//       }
-//     });
-//   });
-
-// });
 
 app.get('/progress', (req, res) => {
   const email = req.session.currentUserEmail;
@@ -367,8 +323,6 @@ app.get('/progress', (req, res) => {
 
   getAllProgressData();
 });
-
-
 
 function ProgessDatabase(email) {
   const databases = ["Progress", "Prog_Intersection", "Prog_Distance", "Prog_Planes"];

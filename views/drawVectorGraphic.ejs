@@ -3,9 +3,25 @@
   <head>
     <title>Your Template</title>
     <link rel="icon" type="image/x-icon" href="../public/images/favicon.png">
+    <link rel="stylesheet" href="../public/css/style.css">
     <meta charset="UTF-8">
   </head>
   <body>
+    <nav id="studentNav">
+      <ul>
+          <li class="dropdown">
+              <a href="#" id="questionsButton">Questions</a>
+              <div class="dropdown-content">
+                  <a href="#" id="intersectionButton">Intersection</a>
+                  <a href="#" id="distanceButton">Distance</a>
+                  <a href="#" id="planesButton">Planes</a>
+              </div>
+          </li>
+          <li><a href="#" id="progressButton">Progress</a></li>
+          <li><a href="#" id="drawButton">Draw Vector</a></li>
+          <li><a href="#" id="profileButton">Profile - [/- email /]</a></li>
+      </ul>
+  </nav>
     [/ if (errorMessage) { /]
       <p style="color: red;">[/- errorMessage /]</p>
     [/ } /]
