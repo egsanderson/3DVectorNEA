@@ -9,7 +9,6 @@ var bodyParser = require('body-parser');
 var helmet = require('helmet');
 var rateLimit = require("express-rate-limit");
 const three = require('three');
-// const Chart = require('chart.js');
 
 const ejs = require("ejs");
 
@@ -23,11 +22,12 @@ var app = express();
 var server = http.createServer(app);
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000, 
+  max: 100
 });
 
 let currentUserEmail = null;
+
 app.use(express.static("public"));
 
 app.use(session({
@@ -268,7 +268,7 @@ app.get('/studentProfile-page', function(req,res) {
 
 app.get('/intersection-questions', (req, res) => {
   const { vector1, vector2, coordinates } = vectorCalculation.VectorOperations.getIntersectingVectorsAndCoordinates();
-  const result = null; // You can set the result based on your logic
+  const result = null;
   const email = req.session.currentUserEmail;
   res.render("intersectionQuestion", { email, vector1, vector2, coordinates, result });
 });
@@ -302,29 +302,84 @@ app.get('/close', function(req,res){
   });
 });
 
-app.get('/studentProgress', (req, res) => {
+// app.get('/studentProgress', (req, res) => {
+//   const email = req.session.currentUserEmail;
+//   console.log(email);
+
+//   const progressData = []; 
+
+//   const tables = ["Progress", "Prog_Intersection", "Prog_Distance", "Prog_Planes"];
+
+//   function getProgressData(table, callback) {
+//     db.get(`SELECT QuestionsAttempted, CorrectAnswers FROM ${table} WHERE email = ?`, [email], (err, row) => {
+//       if (err) {
+//         console.log(err);
+//         callback(err, null);
+//       } else {
+//         if (row) {
+//           const totalQuestions = row.QuestionsAttempted;
+//           const correctAnswers = row.CorrectAnswers;
+//           const incorrectAnswers = totalQuestions - correctAnswers;
+//           progressData.push({ table, correctAnswers, incorrectAnswers });
+//         }
+//         callback(null, row);
+//       }
+//     });
+//   }
+
+//   async function getAllProgressData() {
+//     try {
+//       for (const table of tables) {
+//         await new Promise((resolve) => {
+//           getProgressData(table, resolve);
+//         });
+//       }
+//       res.render('studentProgressPage', { progressData, email });
+//     } catch (error) {
+//       console.error(error);
+//     }
+//   }
+
+//   getAllProgressData();
+// });
+
+app.get('/studentProgress', async (req, res) => {
   const email = req.session.currentUserEmail;
   console.log(email);
 
-  const progressData = []; 
-
+  const progressData = [];
   const tables = ["Progress", "Prog_Intersection", "Prog_Distance", "Prog_Planes"];
 
-  function getProgressData(table, callback) {
-    db.get(`SELECT QuestionsAttempted, CorrectAnswers FROM ${table} WHERE email = ?`, [email], (err, row) => {
-      if (err) {
-        console.log(err);
-        callback(err, null);
+  async function getProgressData(table, callback) {
+    try {
+      const progressKey = await getProgressKey(email);
+
+      if (progressKey !== null) {
+        db.get(
+          `SELECT QuestionsAttempted, CorrectAnswers FROM ${table} WHERE ProgressKey = ?`,
+          [progressKey],
+          (err, row) => {
+            if (err) {
+              console.log(err);
+              callback(err, null);
+            } else {
+              if (row) {
+                const totalQuestions = row.QuestionsAttempted;
+                const correctAnswers = row.CorrectAnswers;
+                const incorrectAnswers = totalQuestions - correctAnswers;
+                progressData.push({ table, correctAnswers, incorrectAnswers });
+              }
+              callback(null, row);
+            }
+          }
+        );
       } else {
-        if (row) {
-          const totalQuestions = row.QuestionsAttempted;
-          const correctAnswers = row.CorrectAnswers;
-          const incorrectAnswers = totalQuestions - correctAnswers;
-          progressData.push({ table, correctAnswers, incorrectAnswers });
-        }
-        callback(null, row);
+        callback(null, null);
       }
-    });
+    } catch (error) {
+      console.error(error);
+      callback(error, null);
+    }
   }
 
   async function getAllProgressData() {
@@ -337,6 +392,7 @@ app.get('/studentProgress', (req, res) => {
       res.render('studentProgressPage', { progressData, email });
     } catch (error) {
       console.error(error);
+      res.status(500).send('Internal Server Error');
     }
   }
 
@@ -346,55 +402,128 @@ app.get('/studentProgress', (req, res) => {
 app.get('/studentHomePage',(req, res) => {
   const email = req.session.currentUserEmail
   res.render('studentHome', {email})
-})
+});
 
 function ProgessDatabase(email) {
-  const databases = ["Progress", "Prog_Intersection", "Prog_Distance", "Prog_Planes"];
+  let progressKey;
 
-  for (let i = 0; i < databases.length; i++) {
-    const tableName = databases[i];
-
-    db.serialize(() => {
-      db.run(`INSERT INTO ${tableName}(Email, QuestionsAttempted, CorrectAnswers) VALUES (?, ?, ?)`, [email, 0, 0], function(err) {
+  db.serialize(() => {
+    db.run(
+      `INSERT INTO Progress (Email, QuestionsAttempted, CorrectAnswers) VALUES (?, ?, ?)`,
+      [email, 0, 0],
+      function (err) {
         if (err) {
           console.log(err);
         } else {
-          console.log(`${tableName} Database successful`);
+          progressKey = this.lastID;
+          console.log(`Progress Database successful`);
+          insertIntoOtherTables(progressKey);
         }
+      }
+    );
+  });
+
+  function insertIntoOtherTables(progressKey) {
+    const databases = ["Prog_Intersection", "Prog_Distance", "Prog_Planes"];
+
+    for (let i = 0; i < databases.length; i++) {
+      const tableName = databases[i];
+
+      db.serialize(() => {
+        db.run(
+          `INSERT INTO ${tableName}(ProgressKey, QuestionsAttempted, CorrectAnswers) VALUES (?, ?, ?)`,
+          [progressKey, 0, 0],
+          function (err) {
+            if (err) {
+              console.log(err);
+            } else {
+              console.log(`${tableName} Database successful`);
+            }
+          }
+        );
       });
-    });
+    }
   }
 }
 
 function updateProgTables(tableName, email, correct) {
-  const databases = ["Progress", tableName];
-  const questionsAttempted = [0, 0];
-  const correctAnswers = [0, 0];
+  getProgressKey(email)
+    .then((progressKey) => {
+      if (progressKey !== null) {
+        console.log(`ProgressKey for ${email}: ${progressKey}`);
+        const databases = ["Progress", tableName];
+        const questionsAttempted = [0, 0];
+        const correctAnswers = [0, 0];
 
-  for (var i = 0; i <= 1; i++) {
-    const tableName = databases[i];
-    db.serialize(() => {
-      db.get(`SELECT QuestionsAttempted, CorrectAnswers FROM ${tableName} WHERE email = ?`, [email], (err, row) => {
-        if (err) {
-          console.error(err.message);
-          return;
-        }
-        if (row) {
-          questionsAttempted[i] = row.QuestionsAttempted + 1;
-          correctAnswers[i] = row.CorrectAnswers + (correct ? 1 : 0);
+        for (var i = 0; i <= 1; i++) {
+          const tableName = databases[i];
+          db.serialize(() => {
+            db.get(
+              `SELECT QuestionsAttempted, CorrectAnswers FROM ${tableName} WHERE ProgressKey = ?`,
+              [progressKey],
+              (err, row) => {
+                if (err) {
+                  console.error(err.message);
+                  return;
+                }
+                if (row) {
+                  questionsAttempted[i] = row.QuestionsAttempted + 1;
+                  correctAnswers[i] = row.CorrectAnswers + (correct ? 1 : 0);
 
-          db.run(`UPDATE ${tableName} SET QuestionsAttempted = ?, CorrectAnswers = ? WHERE email = ?`, [questionsAttempted[i], correctAnswers[i], email], (err) => {
-            if (err) {
-              console.error(err.message);
-            } else {
-              console.log(`Updated ${tableName} for email ${email}`);
-            }
+                  db.run(
+                    `UPDATE ${tableName} SET QuestionsAttempted = ?, CorrectAnswers = ? WHERE ProgressKey = ?`,
+                    [questionsAttempted[i], correctAnswers[i], progressKey],
+                    (err) => {
+                      if (err) {
+                        console.error(err.message);
+                      } else {
+                        console.log(`Updated ${tableName} for ProgressKey ${progressKey}`);
+                      }
+                    }
+                  );
+                }
+              }
+            );
           });
         }
-      });
+      } else {
+        console.log(`No ProgressKey found for ${email}`);
+      }
+    })
+    .catch((err) => {
+      console.error('Error:', err);
     });
-  }
 }
+
+// function updateProgTables(tableName, email, correct) {
+//   const databases = ["Progress", tableName];
+//   const questionsAttempted = [0, 0];
+//   const correctAnswers = [0, 0];
+
+//   for (var i = 0; i <= 1; i++) {
+//     const tableName = databases[i];
+//     db.serialize(() => {
+//       db.get(`SELECT QuestionsAttempted, CorrectAnswers FROM ${tableName} WHERE email = ?`, [email], (err, row) => {
+//         if (err) {
+//           console.error(err.message);
+//           return;
+//         }
+//         if (row) {
+//           questionsAttempted[i] = row.QuestionsAttempted + 1;
+//           correctAnswers[i] = row.CorrectAnswers + (correct ? 1 : 0);
+
+//           db.run(`UPDATE ${tableName} SET QuestionsAttempted = ?, CorrectAnswers = ? WHERE email = ?`, [questionsAttempted[i], correctAnswers[i], email], (err) => {
+//             if (err) {
+//               console.error(err.message);
+//             } else {
+//               console.log(`Updated ${tableName} for email ${email}`);
+//             }
+//           });
+//         }
+//       });
+//     });
+//   }
+// }
 
 function checkPassword(email, password) {
   return new Promise((resolve, reject) => {
@@ -455,7 +584,24 @@ function getName(email) {
         }
       });
     });
-  }
+}
+
+function getProgressKey(email) {
+  return new Promise((resolve, reject) => {
+    db.get(
+      'SELECT ProgressKey FROM Progress WHERE Email = ?',
+      [email],
+      (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(row ? row.ProgressKey : null);
+        }
+      }
+    );
+  });
+}
+
 
 server.listen(3000,function(){ 
     console.log("Server listening on port: 3000");
