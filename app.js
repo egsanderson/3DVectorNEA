@@ -209,6 +209,15 @@ app.post('/login', (req, res) => {
     });
 });
 
+app.get('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error(err);
+    }
+    res.redirect('/');
+  });
+});
+
 app.get('/login-page', (req, res) => {
   req.session.errorMessage = req.session.errorMessage || null;
   res.render('login', { errorMessage: req.session.errorMessage });
@@ -234,15 +243,27 @@ app.get('/draw-page', (req,res) => {
 app.post('/studentAddCode', function(req, res) {
   console.log(req.body.classCode)
   classCode = req.body.classCode
-  const email = req.session.currentUserEmail; // Retrieve email from the session
+  const email = req.session.currentUserEmail;
 
   setClassCode(classCode, email)
  res.render("studentHome", {email : email})
 });
 
-app.get('/vector-questions', (req, res) => {
-  const email = req.session.currentUserEmail;
-  res.render("vectorQuestionPage", { email });
+app.get('/studentProfile-page', function(req,res) {
+  const email = req.session.currentUserEmail
+  getName(email)
+  .then(userDetails => {
+    if (userDetails) {
+      const { forename, surname } = userDetails;
+      res.render("studentProfile", {email, forename, surname})
+    } else {
+      console.log('no details found')
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    res.status(500).send('Internal Server Error');
+  });
 });
 
 app.get('/intersection-questions', (req, res) => {
@@ -259,8 +280,6 @@ app.post("/intersection-check-answer", function(req, res) {
   const vector2 = req.body.vector2;
   const coordinates = req.body.coordinates;
   const dbName = "Prog_Intersection";
-  // console.log(userInput)
-  // console.log(coordinates)
   const result = userInput === coordinates ? 'Correct!' : 'Incorrect!';
   if (result == 'Correct!'){
     var check = true;
@@ -283,7 +302,7 @@ app.get('/close', function(req,res){
   });
 });
 
-app.get('/progress', (req, res) => {
+app.get('/Stu-progress', (req, res) => {
   const email = req.session.currentUserEmail;
   console.log(email);
 
@@ -315,7 +334,7 @@ app.get('/progress', (req, res) => {
           getProgressData(table, resolve);
         });
       }
-      res.render('progressPage', { progressData, email });
+      res.render('StudentprogressPage', { progressData, email });
     } catch (error) {
       console.error(error);
     }
@@ -323,6 +342,11 @@ app.get('/progress', (req, res) => {
 
   getAllProgressData();
 });
+
+app.get('/studentHomePage',(req, res) => {
+  const email = req.session.currentUserEmail
+  res.render('studentHome', {email})
+})
 
 function ProgessDatabase(email) {
   const databases = ["Progress", "Prog_Intersection", "Prog_Distance", "Prog_Planes"];
@@ -409,19 +433,6 @@ function setClassCode(classCode, email){
   });
 }
 
-// function studentOrTeacher(email){
-//   var type = "";
-//   db.get("SELECT AccountType FROM Accounts WHERE Email = ?", [email], function(err, row) {
-//     if (err) {
-//       console.log(err);
-//     } else {
-//       type = row.AccountType
-//       console.log(row.AccountType);
-//     }
-//   })
-//   return type;
-// }
-
 function studentOrTeacher(email) {
   return new Promise((resolve, reject) => {
     db.get('SELECT AccountType FROM Accounts WHERE Email = ?', [email], (err, row) => {
@@ -433,6 +444,18 @@ function studentOrTeacher(email) {
     });
   });
 }
+
+function getName(email) {
+    return new Promise((resolve, reject) => {
+      db.get('SELECT Forename, Surname FROM Accounts WHERE Email = ?', [email], (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(row ? { forename: row.Forename, surname: row.Surname } : null);
+        }
+      });
+    });
+  }
 
 server.listen(3000,function(){ 
     console.log("Server listening on port: 3000");

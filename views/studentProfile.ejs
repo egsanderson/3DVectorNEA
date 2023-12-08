@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Intersection Questions</title>
+        <Title>Profile</Title>
         <link rel="stylesheet" href="../public/css/style.css">
         <link rel="icon" type="image/x-icon" href="../public/images/favicon.png">
         <script src="../public/js/main.js"></script>
@@ -23,34 +23,13 @@
                     <a href="#" id="profileButton">Profile - [/- email /]</a>
                     <div class="dropdown-content">
                         <a href="#" id="StudentprofileButton">View Profile</a>
-                        <a href="#" id="studentHomePage">Logout</a>
+                        <a href="#" id="logoutButton">Logout</a>
                     </div>
                 </li>
             </ul>
         </nav>
-        <h1>Intersection Questions</h1>
-        
-        [/ if (result) { /]
-            <p>[/- result /]</p>
-            <p>Would you like to answer another question?</p>
-           <a href="/intersection-questions" id="repeatButton-Yes">Yes</a>
-            <a href="/studentHomePage" id="repeatButton-No">No</a>
-        [/ } else { /]
-            <p>[/- vector1 /]</p>
-            <p>[/- vector2 /]</p>
-            <p>[/- coordinates /]</p>
 
-            <form action="/intersection-check-answer" method="POST">
-                <input type="hidden" id="vector1" name="vector1" value="[/- vector1 /]">
-                <input type="hidden" id="vector2" name="vector2" value="[/- vector2 /]">
-                <input type="hidden" id="coordinates" name="coordinates" value="[/- coordinates /]">
-
-                <label for="userInput">Enter Coordinates:</label>
-                <input type="text" id="userInput" name="userInput" required>
-                <button type="submit">Check Answer</button>
-            </form>
-        [/ } /]
-        
-        
+        <h1>Student Profile</h1>
+        <h2>Hi, [/- forename /] [/- surname /]</h2>
     </body>
 </html>
