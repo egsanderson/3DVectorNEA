@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   if (StudentprogressButton) {
     StudentprogressButton.addEventListener("click", function() {
-      window.location.href = "/Stu-progress"
+      window.location.href = "/studentProgress"
     })
   }
   if (drawButton) {

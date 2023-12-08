@@ -267,10 +267,10 @@ app.get('/studentProfile-page', function(req,res) {
 });
 
 app.get('/intersection-questions', (req, res) => {
-  const { vector1, vector2, coordinates} = vectorCalculation.getIntersectingVectorsandCoordinates();
-  const result = null
+  const { vector1, vector2, coordinates } = vectorCalculation.VectorOperations.getIntersectingVectorsAndCoordinates();
+  const result = null; // You can set the result based on your logic
   const email = req.session.currentUserEmail;
-  res.render("intersectionQuestion", {email, vector1, vector2, coordinates, result})
+  res.render("intersectionQuestion", { email, vector1, vector2, coordinates, result });
 });
 
 app.post("/intersection-check-answer", function(req, res) {
@@ -302,7 +302,7 @@ app.get('/close', function(req,res){
   });
 });
 
-app.get('/Stu-progress', (req, res) => {
+app.get('/studentProgress', (req, res) => {
   const email = req.session.currentUserEmail;
   console.log(email);
 
@@ -334,7 +334,7 @@ app.get('/Stu-progress', (req, res) => {
           getProgressData(table, resolve);
         });
       }
-      res.render('StudentprogressPage', { progressData, email });
+      res.render('studentProgressPage', { progressData, email });
     } catch (error) {
       console.error(error);
     }

@@ -1,364 +1,194 @@
-// function getRandomNumber() {
-//     return Math.floor(Math.random() * 8);
-// }
+class Vector {
+    constructor() {
+        this.position = {
+            x: this.getRandomNumber(),
+            y: this.getRandomNumber(),
+            z: this.getRandomNumber(),
+        };
 
-// function createRandomVector() {
-//     const x = getRandomNumber();
-//     const y = getRandomNumber();
-//     const z = getRandomNumber();
+        this.direction = {
+            a: this.getRandomNumber(),
+            b: this.getRandomNumber(),
+            c: this.getRandomNumber(),
+        };
 
-//     const a = getRandomNumber();
-//     const b = getRandomNumber();
-//     const c = getRandomNumber();
+        this.scalar = null;
+    }
 
-//     return {
-//         position: { x, y, z },
-//         direction: { a, b, c },
-//     };
-// }
-
-// function calculateVectorEquation(vector, val) {
-//     const { x, y, z } = vector.position;
-//     const { a, b, c } = vector.direction;
-//     const coefficients = ["p", "q"];
-//     const vectorCoefficient = coefficients[val - 1];
-//     console.log(`l${val}: r = (${x},${y},${z}) + ${vectorCoefficient}(${a},${b},${c})`)
-//     return (`l${val}: r = (${x},${y},${z}) + ${vectorCoefficient}(${a},${b},${c})`);
-// }
-
-// function doVectorsIntersect(vector1, vector2) {
-//     var vector1Position = [vector1.position.x, vector1.position.y, vector1.position.z];
-//     var vector1Direction = [vector1.direction.a, vector1.direction.b, vector1.direction.c];
-
-//     var vector2Position = [vector2.position.x, vector2.position.y, vector2.position.z];
-//     var vector2Direction = [vector2.direction.a, vector2.direction.b, vector2.direction.c];
-
-//     var equs = createEquations(vector1Direction, vector2Direction, vector1Position, vector2Position);
-
-//     var isParallel = areVectorsParallel(vector1Direction, vector2Direction);
-
-//     if (isParallel) {
-//         console.log("These vectors are parallel and do not intersect.");
-//         return false;
-//     } else {
-//         var PandQ = findPandQ(equs);
-//         if (checkPandQs(PandQ, equs)) {
-//            console.log("p = " + PandQ[0] + " & q = " + PandQ[1]);
-//             return true;
-//         } else {
-//             console.log("These vectors are skew.");
-//             return false;
-//         }
-//     }
-// }
-
-// function createEquations(v1, v2, p1, p2) {
-//     var equs = [];
-
-//     for (var i = 0; i <= 2; i++) {
-//         equs[i] = [];
-//         equs[i][0] = v1[i];
-//         equs[i][1] = -1 * v2[i];
-//         equs[i][2] = p2[i] - p1[i];
-//     }
-//     return equs;
-// }
-
-// function areVectorsParallel(v1, v2) {
-//     var finalCheck = false;
-//     var checks = [];
-
-//     for (var i = 0; i <= 2; i++) {
-//         if (v2[i] == 0) {
-//             checks[i] = Infinity;
-//         } else if (v1[i] == 0) {
-//             checks[i] = 1;
-//         } else {
-//             checks[i] = v1[i] / v2[i];
-//         }
-//     }
-//     if (checks[0] == checks[1] && checks[1] == checks[2]) {
-//         finalCheck = true;
-//     }
-
-//     return finalCheck;
-// }
-
-// function findPandQ(equs) {
-//     var D, Dq, Dp;
-//     var PandQ = [];
-
-//     D = (equs[0][0] * equs[1][1]) - (equs[1][0] * equs[0][1]);
-//     Dp = (equs[0][2] * equs[1][1]) - (equs[0][1] * equs[1][2]);
-//     Dq = (equs[0][0] * equs[1][2]) - (equs[0][2] * equs[1][0]);
-//     try {
-//         PandQ[0] = Dp / D;
-//         PandQ[1] = Dq / D;
-//     } catch (ex) {
-//         throw ex;
-//     }
-
-//     return PandQ;
-// }
-
-// function checkPandQs(PandQ, equs) {
-//     var check = false;
-//     var equation = (equs[2][0] * PandQ[0]) + (equs[2][1] * PandQ[1]);
-//     if (equation == equs[2][2]) {
-//         check = true;
-//     }
-//     return check;
-// }
-
-// function findIntersection(v1, p1, v2, p2, PandQ) {
-//     var intersection = [];
-
-//     intersection[0] = [];
-//     intersection[1] = [];
-//     for (var i = 0; i <= 2; i++) {
-//         intersection[0][i] = p1[i] + PandQ[0] * v1[i];
-//     }
-//     for (var i = 0; i <= 2; i++) {
-//         intersection[1][i] = p2[i] + PandQ[1] * v2[i];
-//     }
-
-//     var check = true;
-
-//     for (var j = 0; j <= 2; j++) {
-//         if (intersection[0][j] != intersection[1][j]) {
-//             console.log("Error");
-//             check = false;
-//         }
-//     }
-//     if (check == true) {
-//         return intersection;
-//     }
-// }
-
-// function calculateCoordinates(vector1, vector2) {
-//     const PandQ = findPandQ(createEquations(
-//         [vector1.direction.a, vector1.direction.b, vector1.direction.c],
-//         [vector2.direction.a, vector2.direction.b, vector2.direction.c],
-//         [vector1.position.x, vector1.position.y, vector1.position.z],
-//         [vector2.position.x, vector2.position.y, vector2.position.z]
-//     ));
-
-//     const intersection = findIntersection(
-//         [vector1.direction.a, vector1.direction.b, vector1.direction.c],
-//         [vector1.position.x, vector1.position.y, vector1.position.z],
-//         [vector2.direction.a, vector2.direction.b, vector2.direction.c],
-//         [vector2.position.x, vector2.position.y, vector2.position.z],
-//         PandQ
-//     );
-
-//     for (var i = 0; i <=2; i++){
-//         if (typeof (intersection[0][i]) === 'number' && !Number.isInteger(intersection[0][i])) {
-//             intersection[0][i] = parseFloat(intersection[0][i].toFixed(2));
-//         }
-//     }
-//     const formattedCoordinates = `(${intersection[0][0]}, ${intersection[0][1]}, ${intersection[0][2]})`;
-
-//     return formattedCoordinates;
-// }
-
-// module.exports = {
-//     getIntersectingVectorsandCoordinates: function() {
-//         let vector1, vector2;
-
-//         do {
-//             vector1 = createRandomVector();
-//             vector2 = createRandomVector();
-//         } while (!doVectorsIntersect(vector1, vector2));
-
-//         const vector1Equation = calculateVectorEquation(vector1, 1);
-//         const vector2Equation = calculateVectorEquation(vector2, 2);
-//         const coordinates = calculateCoordinates(vector1, vector2);
-
-//         return { vector1: vector1Equation, vector2: vector2Equation, coordinates: coordinates };
-//     },
-
-// };
-
-function getRandomNumber() {
-    return Math.floor(Math.random() * 8);
+    getRandomNumber() {
+        return Math.floor(Math.random() * 8);
+    }
 }
 
-function createRandomVector() {
-    const x = getRandomNumber();
-    const y = getRandomNumber();
-    const z = getRandomNumber();
+class VectorOperations {
+    static createEquations(v1, v2, p1, p2) {
+        const equs = [];
 
-    const a = getRandomNumber();
-    const b = getRandomNumber();
-    const c = getRandomNumber();
+        for (let i = 0; i <= 2; i++) {
+            equs[i] = [];
+            equs[i][0] = v1[i];
+            equs[i][1] = -1 * v2[i];
+            equs[i][2] = p2[i] - p1[i];
+        }
 
-    return {
-        position: { x, y, z },
-        direction: { a, b, c },
-    };
-}
+        return equs;
+    }
 
-function calculateVectorEquation(vector, val) {
-    const { x, y, z } = vector.position;
-    const { a, b, c } = vector.direction;
-    const coefficients = ["p", "q"];
-    const vectorCoefficient = coefficients[val - 1];
-    console.log(`l${val}: r = (${x},${y},${z}) + ${vectorCoefficient}(${a},${b},${c})`)
-    return (`l${val}: r = (${x},${y},${z}) + ${vectorCoefficient}(${a},${b},${c})`);
-}
+    static areVectorsParallel(v1, v2) {
+        const checks = v2.map((value, i) => {
+            if (value === 0) {
+                return Infinity;
+            } else if (v1[i] === 0) {
+                return 1;
+            } else {
+                return v1[i] / value;
+            }
+        });
 
-function doVectorsIntersect(vector1, vector2) {
-    var vector1Position = [vector1.position.x, vector1.position.y, vector1.position.z];
-    var vector1Direction = [vector1.direction.a, vector1.direction.b, vector1.direction.c];
+        return checks.every((value) => value === checks[0]);
+    }
 
-    var vector2Position = [vector2.position.x, vector2.position.y, vector2.position.z];
-    var vector2Direction = [vector2.direction.a, vector2.direction.b, vector2.direction.c];
+    static calculateScalar(vector1, vector2, equs) {
+        const D = equs[0][0] * equs[1][1] - equs[1][0] * equs[0][1];
+        const Dp = equs[0][2] * equs[1][1] - equs[0][1] * equs[1][2];
+        const Dq = equs[0][0] * equs[1][2] - equs[0][2] * equs[1][0];
 
-    var equs = createEquations(vector1Direction, vector2Direction, vector1Position, vector2Position);
-
-    var isParallel = areVectorsParallel(vector1Direction, vector2Direction);
-
-    if (isParallel) {
-        console.log("These vectors are parallel and do not intersect.");
-        return false;
-    } else {
-        var PandQ = findPandQ(equs);
-        if (checkPandQs(PandQ, equs)) {
-            console.log("p = " + PandQ[0] + " & q = " + PandQ[1]);
-            return true;
-        } else {
-            console.log("These vectors are skew.");
-            return false;
+        try {
+            vector1.scalar = Dp / D;
+            vector2.scalar = Dq / D;
+        } catch (ex) {
+            throw ex;
         }
     }
-}
 
-function createEquations(v1, v2, p1, p2) {
-    var equs = [];
+    static checkScalars(vector1, vector2, equs) {
+        const equation =
+            equs[2][0] * vector1.scalar + equs[2][1] * vector2.scalar;
 
-    for (var i = 0; i <= 2; i++) {
-        equs[i] = [];
-        equs[i][0] = v1[i];
-        equs[i][1] = -1 * v2[i];
-        equs[i][2] = p2[i] - p1[i];
+        return equation === equs[2][2];
     }
-    return equs;
-}
 
-function areVectorsParallel(v1, v2) {
-    var finalCheck = false;
-    var checks = [];
+    static findIntersection(v1, p1, v2, p2, scalar) {
+        const intersection = [[], []];
 
-    for (var i = 0; i <= 2; i++) {
-        if (v2[i] == 0) {
-            checks[i] = Infinity;
-        } else if (v1[i] == 0) {
-            checks[i] = 1;
-        } else {
-            checks[i] = v1[i] / v2[i];
+        for (let i = 0; i <= 2; i++) {
+            intersection[0][i] = p1[i] + scalar[0] * v1[i];
+            intersection[1][i] = p2[i] + scalar[1] * v2[i];
         }
-    }
-    if (checks[0] == checks[1] && checks[1] == checks[2]) {
-        finalCheck = true;
-    }
 
-    return finalCheck;
-}
+        const check = intersection[0].every(
+            (value, j) => value === intersection[1][j]
+        );
 
-function findPandQ(equs) {
-    var D, Dq, Dp;
-    var PandQ = [];
-
-    D = (equs[0][0] * equs[1][1]) - (equs[1][0] * equs[0][1]);
-    Dp = (equs[0][2] * equs[1][1]) - (equs[0][1] * equs[1][2]);
-    Dq = (equs[0][0] * equs[1][2]) - (equs[0][2] * equs[1][0]);
-    try {
-        PandQ[0] = Dp / D;
-        PandQ[1] = Dq / D;
-    } catch (ex) {
-        throw ex;
-    }
-
-    return PandQ;
-}
-
-function checkPandQs(PandQ, equs) {
-    var check = false;
-    var equation = (equs[2][0] * PandQ[0]) + (equs[2][1] * PandQ[1]);
-    if (equation == equs[2][2]) {
-        check = true;
-    }
-    return check;
-}
-
-function findIntersection(v1, p1, v2, p2, PandQ) {
-    var intersection = [];
-
-    intersection[0] = [];
-    intersection[1] = [];
-    for (var i = 0; i <= 2; i++) {
-        intersection[0][i] = p1[i] + PandQ[0] * v1[i];
-    }
-    for (var i = 0; i <= 2; i++) {
-        intersection[1][i] = p2[i] + PandQ[1] * v2[i];
-    }
-
-    var check = true;
-
-    for (var j = 0; j <= 2; j++) {
-        if (intersection[0][j] != intersection[1][j]) {
+        if (!check) {
             console.log("Error");
-            check = false;
+            return null;
         }
-    }
-    if (check == true) {
+
         return intersection;
     }
-}
 
-function calculateCoordinates(vector1, vector2) {
-    const PandQ = findPandQ(createEquations(
-        [vector1.direction.a, vector1.direction.b, vector1.direction.c],
-        [vector2.direction.a, vector2.direction.b, vector2.direction.c],
-        [vector1.position.x, vector1.position.y, vector1.position.z],
-        [vector2.position.x, vector2.position.y, vector2.position.z]
-    ));
+    static calculateCoordinates(vector1, vector2, scalar) {
+        const intersection = VectorOperations.findIntersection(
+            [vector1.direction.a, vector1.direction.b, vector1.direction.c],
+            [vector1.position.x, vector1.position.y, vector1.position.z],
+            [vector2.direction.a, vector2.direction.b, vector2.direction.c],
+            [vector2.position.x, vector2.position.y, vector2.position.z],
+            [vector1.scalar, vector2.scalar]
+        );
 
-    const intersection = findIntersection(
-        [vector1.direction.a, vector1.direction.b, vector1.direction.c],
-        [vector1.position.x, vector1.position.y, vector1.position.z],
-        [vector2.direction.a, vector2.direction.b, vector2.direction.c],
-        [vector2.position.x, vector2.position.y, vector2.position.z],
-        PandQ
-    );
+        for (let i = 0; i <= 2; i++) {
+            if (
+                typeof intersection[0][i] === "number" &&
+                !Number.isInteger(intersection[0][i])
+            ) {
+                intersection[0][i] = parseFloat(
+                    intersection[0][i].toFixed(2)
+                );
+            }
+        }
 
-    for (var i = 0; i <=2; i++){
-        if (typeof (intersection[0][i]) === 'number' && !Number.isInteger(intersection[0][i])) {
-            intersection[0][i] = parseFloat(intersection[0][i].toFixed(2));
+        return `(${intersection[0][0]}, ${intersection[0][1]}, ${intersection[0][2]})`;
+    }
+
+    static doVectorsIntersect(vector1, vector2) {
+        const vector1Position = [
+            vector1.position.x,
+            vector1.position.y,
+            vector1.position.z,
+        ];
+        const vector1Direction = [
+            vector1.direction.a,
+            vector1.direction.b,
+            vector1.direction.c,
+        ];
+
+        const vector2Position = [
+            vector2.position.x,
+            vector2.position.y,
+            vector2.position.z,
+        ];
+        const vector2Direction = [
+            vector2.direction.a,
+            vector2.direction.b,
+            vector2.direction.c,
+        ];
+
+        const equs = VectorOperations.createEquations(
+            vector1Direction,
+            vector2Direction,
+            vector1Position,
+            vector2Position
+        );
+
+        const isParallel = VectorOperations.areVectorsParallel(
+            vector1Direction,
+            vector2Direction
+        );
+
+        if (isParallel) {
+            console.log("These vectors are parallel and do not intersect.");
+            return false;
+        } else {
+            VectorOperations.calculateScalar(vector1, vector2, equs);
+
+            if (VectorOperations.checkScalars(vector1, vector2, equs)) {
+                console.log(`Scalar for vector1 (p) = ${vector1.scalar}`);
+                console.log(`Scalar for vector2 (q) = ${vector2.scalar}`);
+                return true;
+            } else {
+                console.log("These vectors are skew.");
+                return false;
+            }
         }
     }
-    const formattedCoordinates = `(${intersection[0][0]}, ${intersection[0][1]}, ${intersection[0][2]})`;
 
-    return formattedCoordinates;
-}
+    static calculateVectorEquation(vector, val) {
+        const { x, y, z } = vector.position;
+        const { a, b, c } = vector.direction;
+        const vectorCoefficient = val === 1 ? "p" : "q";
+        console.log(`l${val}: r = (${x},${y},${z}) + ${vectorCoefficient}(${a},${b},${c})`);
+        return `l${val}: r = (${x},${y},${z}) + ${vectorCoefficient}(${a},${b},${c})`;
+    }
 
-module.exports = {
-    getIntersectingVectorsandCoordinates: function() {
+    static getIntersectingVectorsAndCoordinates() {
         function tryCreateVectors() {
-            const vector1 = createRandomVector();
-            const vector2 = createRandomVector();
+            const vector1 = new Vector();
+            const vector2 = new Vector();
 
-            if (!doVectorsIntersect(vector1, vector2)) {
+            if (!VectorOperations.doVectorsIntersect(vector1, vector2)) {
                 return tryCreateVectors();
             }
 
-            const vector1Equation = calculateVectorEquation(vector1, 1);
-            const vector2Equation = calculateVectorEquation(vector2, 2);
-            const coordinates = calculateCoordinates(vector1, vector2);
+            const vector1Equation = VectorOperations.calculateVectorEquation(vector1, 1);
+            const vector2Equation = VectorOperations.calculateVectorEquation(vector2, 2);
+            const coordinates = VectorOperations.calculateCoordinates(vector1, vector2, [vector1.scalar, vector2.scalar]);
 
             return { vector1: vector1Equation, vector2: vector2Equation, coordinates: coordinates };
         }
 
         return tryCreateVectors();
-    },
-};
+    }
+}
+
+module.exports = { Vector, VectorOperations };
