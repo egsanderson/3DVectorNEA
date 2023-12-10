@@ -8,6 +8,7 @@
     "express-rate-limit": "^6.10.0",
     "express-session": "^1.17.3",
     "helmet": "^7.0.0",
+    "nerdamer": "^1.1.13",
     "sqlite3": "^5.1.6",
     "three": "^0.156.1"
   },

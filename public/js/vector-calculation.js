@@ -1,3 +1,5 @@
+const nerdamer = require('nerdamer/all');
+
 class Vector {
     constructor() {
         this.position = {
@@ -189,6 +191,122 @@ class VectorOperations {
 
         return tryCreateVectors();
     }
+
+    static formatVector(vector) {
+        const { x, y, z } = vector.position;
+        const { a, b, c } = vector.direction;
+        return `r = (${x}, ${y}, ${z}) + p(${a}, ${b}, ${c})`;
+    }
+
 }
 
-module.exports = { Vector, VectorOperations };
+class DistanceVector extends Vector {
+    constructor() {
+        super();
+    }
+
+    generateRandomPoint() {
+        return {
+            x: this.getRandomNumber(),
+            y: this.getRandomNumber(),
+            z: this.getRandomNumber(),
+        };
+    }
+
+    calculateScalar(vector) {
+        const point = this.generateRandomPoint();
+        var p;
+        const lineDirection = [
+            vector.direction.a,
+            vector.direction.b,
+            vector.direction.c,
+        ];
+        const linePosition = [
+            vector.position.x,
+            vector.position.y,
+            vector.position.z,
+        ];
+
+        const OB = [
+            "(" + linePosition[0] + " + p * " + lineDirection[0] + ")",
+            "(" + linePosition[1] + " + p * " + lineDirection[1] + ")",
+            "(" + linePosition[2] + " + p * " + lineDirection[2] + ")"
+        ];
+
+        const AB = [
+            "(" + OB[0] + " - " + point.x + ")",
+            "(" + OB[1] + " - " + point.y + ")",
+            "(" + OB[2] + " - " + point.z + ")"
+        ];
+
+        const scalarProduct = [
+            "(" + AB[0] + " * " + lineDirection[0] + ")",
+            "(" + AB[1] + " * " + lineDirection[1] + ")",
+            "(" + AB[2] + " * " + lineDirection[2] + ")"
+        ];
+    
+        console.log("Equating scalar product to 0 and solving for p:");
+        const equation = scalarProduct.join(" + ") + " = 0";
+
+        var p = nerdamer.solve(equation, 'p');
+        console.log(p.toString)
+
+        const simplifyAndEvaluate = (expression) => {
+            try {
+                const simplified = nerdamer(expression).evaluate().text();
+                const result = eval(simplified);
+                return !isNaN(result) ? result : NaN;
+            } catch (error) {
+                console.error(`Error evaluating expression: ${expression}`);
+                return NaN;
+            }
+        };
+        
+        const pointOnLine = {
+            x: simplifyAndEvaluate(`${linePosition[0]} + ${p.toString()} * ${lineDirection[0]} - ${point.x}`),
+            y: simplifyAndEvaluate(`${linePosition[1]} + ${p.toString()} * ${lineDirection[1]} - ${point.y}`),
+            z: simplifyAndEvaluate(`${linePosition[2]} + ${p.toString()} * ${lineDirection[2]} - ${point.z}`),
+        };
+
+        return {
+            scalar: p,
+            point: point,
+            pointOnLine: pointOnLine
+        };
+    }
+
+    findShortestDistanceToPoint(vector) {
+        const result = this.calculateScalar(vector);
+    
+        const distance = Math.sqrt(
+            Math.pow(nerdamer(result.pointOnLine.x).evaluate(), 2) +
+            Math.pow(nerdamer(result.pointOnLine.z).evaluate(), 2) +
+            Math.pow(nerdamer(result.pointOnLine.y).evaluate(), 2)
+        );
+        const formattedCoordinates = `(${result.point.x}, ${result.point.y}, ${result.point.z})`;
+        const formattedDistance = distance.toFixed(3);
+    
+        return { point: formattedCoordinates, distance: formattedDistance };
+    }
+}
+
+
+
+class ExtendedVectorOperations extends VectorOperations {
+    static findShortestDistanceToPoint(vector) {
+        const distanceVector = new DistanceVector();
+        return distanceVector.findShortestDistanceToPoint(vector);
+    }
+
+    static getShortestDistanceInfo(vector) {
+        const result = this.findShortestDistanceToPoint(vector);
+
+        console.log(`Point on the line: ${result.point}`);
+        console.log(`Shortest distance from the point to the line: ${result.distance}`);
+        return result;
+    }
+}
+
+
+
+module.exports = { Vector, VectorOperations: ExtendedVectorOperations, DistanceVector };

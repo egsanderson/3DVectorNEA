@@ -9,6 +9,8 @@ var bodyParser = require('body-parser');
 var helmet = require('helmet');
 var rateLimit = require("express-rate-limit");
 const three = require('three');
+const nerdamer = require('nerdamer');
+
 
 const ejs = require("ejs");
 
@@ -71,8 +73,10 @@ app.post('/add', (req, res) => {
     res.redirect("/createAccount-page")
   }
   db.serialize(() => {
-    db.run('INSERT INTO Accounts(Forename, Surname, Email, Password, Classroom, AccountType) VALUES (?, ?, ?, ?, ?, ?)',
-    [req.body.forename, req.body.surname, req.body.email, req.body.password, null, req.body.account_type], function(err) {
+    db.run(
+      'INSERT INTO Accounts(Forename, Surname, Email, Password, Classroom, AccountType) VALUES (?, ?, ?, ?, ?, ?)',
+      [req.body.forename, req.body.surname, req.body.email, req.body.password, null, req.body.account_type],
+      function (err) {
       if (err) {
         if (err.message.includes('UNIQUE constraint failed')) {
           req.session.errorMessage = "The email already exists"
@@ -87,7 +91,7 @@ app.post('/add', (req, res) => {
         console.log(`New ${req.body.account_type} has been added`);
         req.session.currentUserEmail = email; 
 
-        ProgessDatabase(req.body.email)
+        ProgessDatabase(this.lastID);
         if (req.body.account_type == "teacher"){
           classCode = createClassCode()
           setClassCode(classCode, req.body.email)
@@ -273,6 +277,38 @@ app.get('/intersection-questions', (req, res) => {
   res.render("intersectionQuestion", { email, vector1, vector2, coordinates, result });
 });
 
+app.get('/distance-questions', (req, res) => {
+  const vector = new vectorCalculation.Vector();
+  const values = vectorCalculation.VectorOperations.getShortestDistanceInfo(vector);
+  const result = null;
+
+  const { point, distance } = values;
+  const email = req.session.currentUserEmail;
+  const formattedVector = vectorCalculation.VectorOperations.formatVector(vector);
+
+  res.render("distanceQuestion", { email, vector : formattedVector, point, distance, result});
+});
+
+app.post('/distance-check-answer', function(req, res) {
+  const email = req.session.currentUserEmail;
+  const userInput = req.body.userInput;
+  const vector = req.body.vector;
+  const point = req.body.point;
+  const distance = req.body.distance;
+  const dbName = "Prog_Distance";
+
+  const result = userInput === distance ? 'Correct!' : 'Incorrect!';
+  if (result == 'Correct!'){
+    var check = true;
+  }
+  else{
+    var check = false;
+  }
+  updateProgTables(dbName, email, check)
+  res.render("distanceQuestion", { email, vector, point, distance, result})
+
+})
+
 app.post("/intersection-check-answer", function(req, res) {
   const email = req.session.currentUserEmail;
   const userInput = req.body.userInput;
@@ -302,62 +338,28 @@ app.get('/close', function(req,res){
   });
 });
 
-// app.get('/studentProgress', (req, res) => {
-//   const email = req.session.currentUserEmail;
-//   console.log(email);
-
-//   const progressData = []; 
-
-//   const tables = ["Progress", "Prog_Intersection", "Prog_Distance", "Prog_Planes"];
-
-//   function getProgressData(table, callback) {
-//     db.get(`SELECT QuestionsAttempted, CorrectAnswers FROM ${table} WHERE email = ?`, [email], (err, row) => {
-//       if (err) {
-//         console.log(err);
-//         callback(err, null);
-//       } else {
-//         if (row) {
-//           const totalQuestions = row.QuestionsAttempted;
-//           const correctAnswers = row.CorrectAnswers;
-//           const incorrectAnswers = totalQuestions - correctAnswers;
-//           progressData.push({ table, correctAnswers, incorrectAnswers });
-//         }
-//         callback(null, row);
-//       }
-//     });
-//   }
-
-//   async function getAllProgressData() {
-//     try {
-//       for (const table of tables) {
-//         await new Promise((resolve) => {
-//           getProgressData(table, resolve);
-//         });
-//       }
-//       res.render('studentProgressPage', { progressData, email });
-//     } catch (error) {
-//       console.error(error);
-//     }
-//   }
-
-//   getAllProgressData();
-// });
-
 app.get('/studentProgress', async (req, res) => {
   const email = req.session.currentUserEmail;
   console.log(email);
+
+  const accountID = await getAccountIDByEmail(email);
+
+  if (accountID === null) {
+    res.status(404).send('Account not found');
+    return;
+  }
 
   const progressData = [];
   const tables = ["Progress", "Prog_Intersection", "Prog_Distance", "Prog_Planes"];
 
   async function getProgressData(table, callback) {
     try {
-      const progressKey = await getProgressKey(email);
+      const progressID = await getProgressID(accountID);
 
-      if (progressKey !== null) {
+      if (progressID !== null) {
         db.get(
-          `SELECT QuestionsAttempted, CorrectAnswers FROM ${table} WHERE ProgressKey = ?`,
-          [progressKey],
+          `SELECT QuestionsAttempted, CorrectAnswers FROM ${table} WHERE ProgressID = ?`,
+          [progressID],
           (err, row) => {
             if (err) {
               console.log(err);
@@ -404,26 +406,26 @@ app.get('/studentHomePage',(req, res) => {
   res.render('studentHome', {email})
 });
 
-function ProgessDatabase(email) {
-  let progressKey;
+function ProgessDatabase(AccountsID) {
+  let ProgressID;
 
   db.serialize(() => {
     db.run(
-      `INSERT INTO Progress (Email, QuestionsAttempted, CorrectAnswers) VALUES (?, ?, ?)`,
-      [email, 0, 0],
+      `INSERT INTO Progress (AccountID, QuestionsAttempted, CorrectAnswers) VALUES (?, ?, ?)`,
+      [AccountsID, 0, 0],
       function (err) {
         if (err) {
           console.log(err);
         } else {
-          progressKey = this.lastID;
+          ProgressID = this.lastID;
           console.log(`Progress Database successful`);
-          insertIntoOtherTables(progressKey);
+          insertIntoOtherTables(ProgressID);
         }
       }
     );
   });
 
-  function insertIntoOtherTables(progressKey) {
+  function insertIntoOtherTables(ProgressID) {
     const databases = ["Prog_Intersection", "Prog_Distance", "Prog_Planes"];
 
     for (let i = 0; i < databases.length; i++) {
@@ -431,8 +433,8 @@ function ProgessDatabase(email) {
 
       db.serialize(() => {
         db.run(
-          `INSERT INTO ${tableName}(ProgressKey, QuestionsAttempted, CorrectAnswers) VALUES (?, ?, ?)`,
-          [progressKey, 0, 0],
+          `INSERT INTO ${tableName}(ProgressID, QuestionsAttempted, CorrectAnswers) VALUES (?, ?, ?)`,
+          [ProgressID, 0, 0],
           function (err) {
             if (err) {
               console.log(err);
@@ -447,10 +449,19 @@ function ProgessDatabase(email) {
 }
 
 function updateProgTables(tableName, email, correct) {
-  getProgressKey(email)
-    .then((progressKey) => {
-      if (progressKey !== null) {
-        console.log(`ProgressKey for ${email}: ${progressKey}`);
+  getAccountIDByEmail(email)
+    .then((accountID) => {
+      if (accountID !== null) {
+        console.log(`AccountID for ${email}: ${accountID}`);
+        return getProgressID(accountID);
+      } else {
+        console.log(`No AccountID found for ${email}`);
+        return Promise.resolve(null);
+      }
+    })
+    .then((progressID) => {
+      if (progressID !== null) {
+        console.log(`ProgressID for ${email}: ${progressID}`);
         const databases = ["Progress", tableName];
         const questionsAttempted = [0, 0];
         const correctAnswers = [0, 0];
@@ -459,8 +470,8 @@ function updateProgTables(tableName, email, correct) {
           const tableName = databases[i];
           db.serialize(() => {
             db.get(
-              `SELECT QuestionsAttempted, CorrectAnswers FROM ${tableName} WHERE ProgressKey = ?`,
-              [progressKey],
+              `SELECT QuestionsAttempted, CorrectAnswers FROM ${tableName} WHERE ProgressID = ?`,
+              [progressID],
               (err, row) => {
                 if (err) {
                   console.error(err.message);
@@ -471,13 +482,13 @@ function updateProgTables(tableName, email, correct) {
                   correctAnswers[i] = row.CorrectAnswers + (correct ? 1 : 0);
 
                   db.run(
-                    `UPDATE ${tableName} SET QuestionsAttempted = ?, CorrectAnswers = ? WHERE ProgressKey = ?`,
-                    [questionsAttempted[i], correctAnswers[i], progressKey],
+                    `UPDATE ${tableName} SET QuestionsAttempted = ?, CorrectAnswers = ? WHERE ProgressID = ?`,
+                    [questionsAttempted[i], correctAnswers[i], progressID],
                     (err) => {
                       if (err) {
                         console.error(err.message);
                       } else {
-                        console.log(`Updated ${tableName} for ProgressKey ${progressKey}`);
+                        console.log(`Updated ${tableName} for ProgressID ${progressID}`);
                       }
                     }
                   );
@@ -487,43 +498,13 @@ function updateProgTables(tableName, email, correct) {
           });
         }
       } else {
-        console.log(`No ProgressKey found for ${email}`);
+        console.log(`No ProgressID found for ${email}`);
       }
     })
     .catch((err) => {
       console.error('Error:', err);
     });
 }
-
-// function updateProgTables(tableName, email, correct) {
-//   const databases = ["Progress", tableName];
-//   const questionsAttempted = [0, 0];
-//   const correctAnswers = [0, 0];
-
-//   for (var i = 0; i <= 1; i++) {
-//     const tableName = databases[i];
-//     db.serialize(() => {
-//       db.get(`SELECT QuestionsAttempted, CorrectAnswers FROM ${tableName} WHERE email = ?`, [email], (err, row) => {
-//         if (err) {
-//           console.error(err.message);
-//           return;
-//         }
-//         if (row) {
-//           questionsAttempted[i] = row.QuestionsAttempted + 1;
-//           correctAnswers[i] = row.CorrectAnswers + (correct ? 1 : 0);
-
-//           db.run(`UPDATE ${tableName} SET QuestionsAttempted = ?, CorrectAnswers = ? WHERE email = ?`, [questionsAttempted[i], correctAnswers[i], email], (err) => {
-//             if (err) {
-//               console.error(err.message);
-//             } else {
-//               console.log(`Updated ${tableName} for email ${email}`);
-//             }
-//           });
-//         }
-//       });
-//     });
-//   }
-// }
 
 function checkPassword(email, password) {
   return new Promise((resolve, reject) => {
@@ -586,22 +567,37 @@ function getName(email) {
     });
 }
 
-function getProgressKey(email) {
+function getProgressID(accountID) {
   return new Promise((resolve, reject) => {
     db.get(
-      'SELECT ProgressKey FROM Progress WHERE Email = ?',
-      [email],
+      'SELECT ProgressID FROM Progress WHERE AccountID = ?',
+      [accountID],
       (err, row) => {
         if (err) {
           reject(err);
         } else {
-          resolve(row ? row.ProgressKey : null);
+          resolve(row ? row.ProgressID : null);
         }
       }
     );
   });
 }
 
+function getAccountIDByEmail(email) {
+  return new Promise((resolve, reject) => {
+    db.get(
+      'SELECT AccountID FROM Accounts WHERE Email = ?',
+      [email],
+      (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(row ? row.AccountID : null);
+        }
+      }
+    );
+  });
+}
 
 server.listen(3000,function(){ 
     console.log("Server listening on port: 3000");

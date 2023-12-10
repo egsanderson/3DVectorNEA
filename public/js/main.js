@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const StudentprofileButton = document.getElementById("StudentprofileButton");
   // const profileButton = document.getElementById("profileButton");
   const intersectionButton = document.getElementById("intersectionButton");
+  const distanceButton = document.getElementById("distanceButton");
+
   const logoutButton = document.getElementById('logoutButton')
   if (loginButton) {
     loginButton.addEventListener("click", function () {
@@ -36,6 +38,11 @@ document.addEventListener("DOMContentLoaded", function () {
   if (intersectionButton) {
     intersectionButton.addEventListener("click", function () {
       window.location.href = "/intersection-questions";
+    });
+  }
+  if (distanceButton) {
+    distanceButton.addEventListener("click", function () {
+      window.location.href = "/distance-questions";
     });
   }
   if (logoutButton) {
