@@ -3,10 +3,16 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/public/css/style.css">
+    <script src="../public/js/main.js"></script>
     <link rel="icon" type="image/x-icon" href="../public/images/favicon.png">
   </head>
   <body>
-
+    <nav id="mainNav">
+      <ul>
+          <li><a href="#" id="createAccountButton">Create An Account</a></li>
+          <li><a href="#" id="loginButton">Login</a></li>
+      </ul>
+    </nav>
     <div class="form-popup" id="classCodeStudent">
       <form class="classCodeStudent" action="/studentAddCode" method="POST" onsubmit="closeForm()">
         <h1>Enter Class Code</h1>

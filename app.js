@@ -271,7 +271,7 @@ app.get('/studentProfile-page', function(req,res) {
 });
 
 app.get('/intersection-questions', (req, res) => {
-  const { vector1, vector2, coordinates } = vectorCalculation.VectorOperations.getIntersectingVectorsAndCoordinates();
+  const { vector1, vector2, coordinates } = vectorCalculation.IntersectionVectorOperations.getIntersectingVectorsAndCoordinates();
   const result = null;
   const email = req.session.currentUserEmail;
   res.render("intersectionQuestion", { email, vector1, vector2, coordinates, result });
@@ -279,7 +279,7 @@ app.get('/intersection-questions', (req, res) => {
 
 app.get('/distance-questions', (req, res) => {
   const vector = new vectorCalculation.Vector();
-  const values = vectorCalculation.VectorOperations.getShortestDistanceInfo(vector);
+  const values = vectorCalculation.DistanceVectorOperations.findShortestDistanceToPoint(vector);
   const result = null;
 
   const { point, distance } = values;

@@ -2,17 +2,26 @@
 <html>
     <head>
         <title>Create an Account</title>
+        <link rel="stylesheet" href="../public/css/style.css">
+        <script src="../public/js/main.js"></script>
         <link rel="icon" type="image/x-icon" href="../public/images/favicon.png">
         <meta charset="UTF-8">
     </head>
     <body>
+      <nav id="mainNav">
+        <ul>
+            <li><a href="#" id="createAccountButton">Create An Account</a></li>
+            <li><a href="#" id="loginButton">Login</a></li>
+        </ul>
+        <div></div>
+      </nav>
         [/ if (errorMessage) { /]
           <p style="color: red;">[/- errorMessage /]</p>
         [/ } /]
-        <div id="registration-form">
+        <div id="registration-container">
           <form id="registration-form" action="/add" method="POST">
             <fieldset>
-              <h3>Create a [/- accountType /] Account</h3> 
+              <h3>Create a [/- accountType /] account</h3> 
               <input type="hidden" name="account_type" value="[/- accountType /]">
               <label>First Name</label>
               <input type="text" id="forename" name="forename" required>

@@ -133,3 +133,81 @@ nav#studentNav{
     margin: 10px;
     text-align: center;
 }
+
+#registration-container,
+#login-form,
+#accountType-form {
+    max-width: 450px;
+    margin: 50px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+
+#registration-container h3,
+#login-form h3,
+#accountType-form h3 {
+    text-align: center;
+    color: #333;
+}
+
+#registration-container label,
+#login-form label,
+#accountType-form label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+}
+
+#registration-container input,
+#login-form input,
+#accountType-form input {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#registration-container button,
+#login-form button,
+#accountType-form button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #04AA6D;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#registration-container button[type="reset"],
+#login-form button[type="reset"],
+#accountType-form button[type="reset"] {
+    background-color: #ccc;
+    margin-right: 10px;
+}
+
+#registration-container button:hover,
+#login-form button:hover,
+#accountType-form button:hover {
+    opacity: 0.9;
+}
+
+#accountType-form .radio-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the radio button labels horizontally */
+}
+
+#accountType-form input {
+    margin-bottom: 5px;
+}
+
+#accountType-form label {
+    margin-bottom: 10px;
+    text-align: center; /* Center the radio button labels */
+}
+

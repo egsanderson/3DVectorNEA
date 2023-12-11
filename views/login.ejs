@@ -2,14 +2,22 @@
 <html>
     <head>
         <title>Login</title>
+        <link rel="stylesheet" href="../public/css/style.css">
+        <script src="../public/js/main.js"></script>
         <link rel="icon" type="image/x-icon" href="../public/images/favicon.png">
         <meta charset="UTF-8">
     </head>
     <body>
+        <nav id="mainNav">
+            <ul>
+                <li><a href="#" id="createAccountButton">Create An Account</a></li>
+                <li><a href="#" id="loginButton">Login</a></li>
+            </ul>
+          </nav>
         [/ if (errorMessage) { /]
             <p style="color: red;">[/- errorMessage /]</p>
         [/ } /]
-        <form class="login-form" action="/login" method="POST">
+        <form id="login-form" action="/login" method="POST">
             <fieldset>
                 <h3>Login</h3>
                 <label>Email</label>

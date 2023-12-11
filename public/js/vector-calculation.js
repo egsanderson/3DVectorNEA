@@ -22,6 +22,21 @@ class Vector {
     }
 }
 
+class DistanceVector extends Vector {
+    constructor() {
+        super();
+    }
+
+    generateRandomPoint() {
+        return {
+            x: this.getRandomNumber(),
+            y: this.getRandomNumber(),
+            z: this.getRandomNumber(),
+        };
+    }
+}
+
+
 class VectorOperations {
     static createEquations(v1, v2, p1, p2) {
         const equs = [];
@@ -50,7 +65,7 @@ class VectorOperations {
         return checks.every((value) => value === checks[0]);
     }
 
-    static calculateScalar(vector1, vector2, equs) {
+    static calculateScalars(vector1, vector2, equs) {
         const D = equs[0][0] * equs[1][1] - equs[1][0] * equs[0][1];
         const Dp = equs[0][2] * equs[1][1] - equs[0][1] * equs[1][2];
         const Dq = equs[0][0] * equs[1][2] - equs[0][2] * equs[1][0];
@@ -70,6 +85,15 @@ class VectorOperations {
         return equation === equs[2][2];
     }
 
+    static formatVector(vector) {
+        const { x, y, z } = vector.position;
+        const { a, b, c } = vector.direction;
+        return `r = (${x}, ${y}, ${z}) + p(${a}, ${b}, ${c})`;
+    }
+
+}
+
+class IntersectionVectorOperations extends VectorOperations {
     static findIntersection(v1, p1, v2, p2, scalar) {
         const intersection = [[], []];
 
@@ -89,9 +113,9 @@ class VectorOperations {
 
         return intersection;
     }
-
+    
     static calculateCoordinates(vector1, vector2, scalar) {
-        const intersection = VectorOperations.findIntersection(
+        const intersection = IntersectionVectorOperations.findIntersection(
             [vector1.direction.a, vector1.direction.b, vector1.direction.c],
             [vector1.position.x, vector1.position.y, vector1.position.z],
             [vector2.direction.a, vector2.direction.b, vector2.direction.c],
@@ -152,7 +176,7 @@ class VectorOperations {
             console.log("These vectors are parallel and do not intersect.");
             return false;
         } else {
-            VectorOperations.calculateScalar(vector1, vector2, equs);
+            VectorOperations.calculateScalars(vector1, vector2, equs);
 
             if (VectorOperations.checkScalars(vector1, vector2, equs)) {
                 console.log(`Scalar for vector1 (p) = ${vector1.scalar}`);
@@ -178,13 +202,13 @@ class VectorOperations {
             const vector1 = new Vector();
             const vector2 = new Vector();
 
-            if (!VectorOperations.doVectorsIntersect(vector1, vector2)) {
+            if (!IntersectionVectorOperations.doVectorsIntersect(vector1, vector2)) {
                 return tryCreateVectors();
             }
 
-            const vector1Equation = VectorOperations.calculateVectorEquation(vector1, 1);
-            const vector2Equation = VectorOperations.calculateVectorEquation(vector2, 2);
-            const coordinates = VectorOperations.calculateCoordinates(vector1, vector2, [vector1.scalar, vector2.scalar]);
+            const vector1Equation = IntersectionVectorOperations.calculateVectorEquation(vector1, 1);
+            const vector2Equation = IntersectionVectorOperations.calculateVectorEquation(vector2, 2);
+            const coordinates = IntersectionVectorOperations.calculateCoordinates(vector1, vector2, [vector1.scalar, vector2.scalar]);
 
             return { vector1: vector1Equation, vector2: vector2Equation, coordinates: coordinates };
         }
@@ -192,29 +216,13 @@ class VectorOperations {
         return tryCreateVectors();
     }
 
-    static formatVector(vector) {
-        const { x, y, z } = vector.position;
-        const { a, b, c } = vector.direction;
-        return `r = (${x}, ${y}, ${z}) + p(${a}, ${b}, ${c})`;
-    }
-
 }
 
-class DistanceVector extends Vector {
-    constructor() {
-        super();
-    }
 
-    generateRandomPoint() {
-        return {
-            x: this.getRandomNumber(),
-            y: this.getRandomNumber(),
-            z: this.getRandomNumber(),
-        };
-    }
-
+class DistanceVectorOperations extends VectorOperations {
     calculateScalar(vector) {
-        const point = this.generateRandomPoint();
+        const DisVect = new DistanceVector()
+        const point = DisVect.generateRandomPoint();
         var p;
         const lineDirection = [
             vector.direction.a,
@@ -275,9 +283,9 @@ class DistanceVector extends Vector {
         };
     }
 
-    findShortestDistanceToPoint(vector) {
+    calculateShortestDistanceToPoint(vector) {
         const result = this.calculateScalar(vector);
-    
+
         const distance = Math.sqrt(
             Math.pow(nerdamer(result.pointOnLine.x).evaluate(), 2) +
             Math.pow(nerdamer(result.pointOnLine.z).evaluate(), 2) +
@@ -285,28 +293,22 @@ class DistanceVector extends Vector {
         );
         const formattedCoordinates = `(${result.point.x}, ${result.point.y}, ${result.point.z})`;
         const formattedDistance = distance.toFixed(3);
-    
+
         return { point: formattedCoordinates, distance: formattedDistance };
     }
-}
 
-
-
-class ExtendedVectorOperations extends VectorOperations {
     static findShortestDistanceToPoint(vector) {
-        const distanceVector = new DistanceVector();
-        return distanceVector.findShortestDistanceToPoint(vector);
-    }
-
-    static getShortestDistanceInfo(vector) {
-        const result = this.findShortestDistanceToPoint(vector);
-
+        const distanceVector = new DistanceVectorOperations();
+        const result = distanceVector.calculateShortestDistanceToPoint(vector);
         console.log(`Point on the line: ${result.point}`);
         console.log(`Shortest distance from the point to the line: ${result.distance}`);
         return result;
     }
+
+    static findShortestDistanceBetweenLines(vector1, vector2) {
+
+    }
 }
 
 
-
-module.exports = { Vector, VectorOperations: ExtendedVectorOperations, DistanceVector };
+module.exports = {Vector, DistanceVector, VectorOperations, IntersectionVectorOperations, DistanceVectorOperations };
