@@ -29,13 +29,28 @@
             </ul>
         </nav>
         <h1>Distance Questions</h1>
-
         [/ if (result) { /]
             <p>[/- result /]</p>
             <p>Would you like to answer another question?</p>
-           <a href="/distance-questions" id="repeatButton-Yes">Yes</a>
+            <a href="/distance-questions" id="repeatButton-Yes">Yes</a>
             <a href="/studentHomePage" id="repeatButton-No">No</a>
-        [/ } else { /]
+        [/ } else if (val == true) { /]
+            <p>[/- vector1 /]</p>
+            <p>[/- vector2 /]</p>
+            <p>[/- distance /]</p>
+
+            <form action="/distance-check-answer" method="POST">
+                <input type="hidden" id="vector1" name="vector1" value="[/- vector1 /]">
+                <input type="hidden" id="vector2" name="vector2" value="[/- vector2 /]">
+                <input type="hidden" id="distance" name="distance" value="[/- distance /]">
+                <input type="hidden" id="val" name="val" value="[/- val /]">
+
+
+                <label for="userInput">Enter Distance:</label>
+                <input type="text" id="userInput" name="userInput" required>
+                <button type="submit">Check Answer</button>
+            </form>
+        [/ } else if (val == false) { /]
             <p>[/- vector /]</p>
             <p>[/- point /]</p>
             <p>[/- distance /]</p>
@@ -44,14 +59,16 @@
                 <input type="hidden" id="vector" name="vector" value="[/- vector /]">
                 <input type="hidden" id="point" name="point" value="[/- point /]">
                 <input type="hidden" id="distance" name="distance" value="[/- distance /]">
+                <input type="hidden" id="val" name="val" value="[/- val /]">
+
 
                 <label for="userInput">Enter Distance:</label>
                 <input type="text" id="userInput" name="userInput" required>
                 <button type="submit">Check Answer</button>
             </form>
         [/ } /]
+        
+        
 
-
-    
     </body>
 </html>

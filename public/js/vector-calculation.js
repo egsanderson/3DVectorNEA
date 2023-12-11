@@ -36,7 +36,6 @@ class DistanceVector extends Vector {
     }
 }
 
-
 class VectorOperations {
     static createEquations(v1, v2, p1, p2) {
         const equs = [];
@@ -85,10 +84,11 @@ class VectorOperations {
         return equation === equs[2][2];
     }
 
-    static formatVector(vector) {
+    static formatVector(vector, Coeff, front) {
         const { x, y, z } = vector.position;
         const { a, b, c } = vector.direction;
-        return `r = (${x}, ${y}, ${z}) + p(${a}, ${b}, ${c})`;
+        const scalarCoeff = Coeff
+        return `${front}r = (${x}, ${y}, ${z}) + ${scalarCoeff}(${a}, ${b}, ${c})`;
     }
 
 }
@@ -283,6 +283,98 @@ class DistanceVectorOperations extends VectorOperations {
         };
     }
 
+    createEquationsDistance(vector1, vector2) {
+        const lineDirection1 = [
+            vector1.direction.a,
+            vector1.direction.b,
+            vector1.direction.c,
+        ];
+        const linePosition1 = [
+            vector1.position.x,
+            vector1.position.y,
+            vector1.position.z,
+        ];
+
+        const lineDirection2 = [
+            vector2.direction.a,
+            vector2.direction.b,
+            vector2.direction.c,
+        ];
+        const linePosition2 = [
+            vector2.position.x,
+            vector2.position.y,
+            vector2.position.z,
+        ];
+
+        const OP = [
+            "(" + linePosition1[0] + " + p * " + lineDirection1[0] + ")",
+            "(" + linePosition1[1] + " + p * " + lineDirection1[1] + ")",
+            "(" + linePosition1[2] + " + p * " + lineDirection1[2] + ")"
+        ];
+
+        const OQ = [
+            "(" + linePosition2[0] + " + q * " + lineDirection2[0] + ")",
+            "(" + linePosition2[1] + " + q * " + lineDirection2[1] + ")",
+            "(" + linePosition2[2] + " + q * " + lineDirection2[2] + ")"
+        ];
+
+        const PQ = [
+            "(" + OQ[0] + " - " + OP[0] + ")",
+            "(" + OQ[1] + " - " + OP[1] + ")",
+            "(" + OQ[2] + " - " + OP[2] + ")",
+        ];
+
+        const scalarProduct1 = [
+            "(" + PQ[0] + " * " + lineDirection1[0] + ")",
+            "(" + PQ[1] + " * " + lineDirection1[1] + ")",
+            "(" + PQ[2] + " * " + lineDirection1[2] + ")",
+        ];
+
+        const scalarProduct2 = [
+            "(" + PQ[0] + " * " + lineDirection2[0] + ")",
+            "(" + PQ[1] + " * " + lineDirection2[1] + ")",
+            "(" + PQ[2] + " * " + lineDirection2[2] + ")",
+        ];
+
+        const equation1 = scalarProduct1.join(" + ")  + " = 0";
+        const equation2 = scalarProduct2.join(" + ")  + " = 0";
+
+        var solutions = nerdamer.solveEquations([equation1, equation2],);
+
+        console.log(solutions);
+        const roundedSolutions = solutions.map(([variable, value]) => [variable, parseFloat(value.toFixed(3))]);
+
+        const p = parseFloat(roundedSolutions.find(([variable]) => variable === 'p')[1].toFixed(3));
+        const q = parseFloat(roundedSolutions.find(([variable]) => variable === 'q')[1].toFixed(3));
+        console.log(p)
+        console.log(q)
+
+        const simplifyAndEvaluate = (expression) => {
+            try {
+                const simplified = nerdamer(expression).evaluate().text();
+                const result = eval(simplified);
+                return !isNaN(result) ? result : NaN;
+            } catch (error) {
+                console.error(`Error evaluating expression: ${expression}`);
+                return NaN;
+            }
+        };
+        const expresssions = [
+            (`( ${linePosition2[0]} + ${p.toString()} * ${lineDirection2[0]} ) - ( ${linePosition1[0]} + ${q.toString()} * ${lineDirection1[0]}  )`),
+            (`( ${linePosition2[1]} + ${p.toString()} * ${lineDirection2[1]} ) - ( ${linePosition1[1]} + ${q.toString()} * ${lineDirection1[1]}  )`),
+            (`( ${linePosition2[2]} + ${p.toString()} * ${lineDirection2[2]} ) - ( ${linePosition1[2]} + ${q.toString()} * ${lineDirection1[2]}  )`),
+        ]
+        const distanceVector = {
+            x: simplifyAndEvaluate(expresssions[0]),
+            y: simplifyAndEvaluate(expresssions[1]),
+            z: simplifyAndEvaluate(expresssions[2]),
+        };
+        console.log(distanceVector)
+        return {
+            distanceVector: distanceVector
+        }
+    }
+
     calculateShortestDistanceToPoint(vector) {
         const result = this.calculateScalar(vector);
 
@@ -297,6 +389,23 @@ class DistanceVectorOperations extends VectorOperations {
         return { point: formattedCoordinates, distance: formattedDistance };
     }
 
+    calculateShortestDistanceBetweenLines(vector1, vector2) {
+        const result = this.createEquationsDistance(vector1, vector2);
+        const distance = Math.sqrt(
+            Math.pow(nerdamer(result.distanceVector.x).evaluate(), 2) +
+            Math.pow(nerdamer(result.distanceVector.z).evaluate(), 2) +
+            Math.pow(nerdamer(result.distanceVector.y).evaluate(), 2)
+        );
+
+        const formatVector1 = VectorOperations.formatVector(vector1, "p", "l1: ");
+        const formatVector2 = VectorOperations.formatVector(vector2, "q", "l2: ");
+
+        const formattedDistance = distance.toFixed(3);
+
+        return { formatVector1: formatVector1, formatVector2: formatVector2, distance: formattedDistance };
+
+    }
+
     static findShortestDistanceToPoint(vector) {
         const distanceVector = new DistanceVectorOperations();
         const result = distanceVector.calculateShortestDistanceToPoint(vector);
@@ -306,7 +415,12 @@ class DistanceVectorOperations extends VectorOperations {
     }
 
     static findShortestDistanceBetweenLines(vector1, vector2) {
-
+        const distanceVector = new DistanceVectorOperations();
+        const result = distanceVector.calculateShortestDistanceBetweenLines(vector1, vector2);
+        console.log(`Vector 1 on the line: ${result.formatVector1}`);
+        console.log(`Vector 2 on the line: ${result.formatVector2}`);
+        console.log(`Shortest distance from the point to the line: ${result.distance}`);
+        return result;
     }
 }
 

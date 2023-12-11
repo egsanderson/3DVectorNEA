@@ -278,25 +278,38 @@ app.get('/intersection-questions', (req, res) => {
 });
 
 app.get('/distance-questions', (req, res) => {
-  const vector = new vectorCalculation.Vector();
-  const values = vectorCalculation.DistanceVectorOperations.findShortestDistanceToPoint(vector);
-  const result = null;
+  var val = getRandomBool()
+  console.log(val)
+  if (val == true) {
+    const vector1 = new vectorCalculation.Vector();
+    const vector2 = new vectorCalculation.Vector();
+    const result = null;
+    const email = req.session.currentUserEmail;
+  
+    const values = vectorCalculation.DistanceVectorOperations.findShortestDistanceBetweenLines(vector1, vector2);
+    const {formatVector1, formatVector2, distance} = values;
+    res.render("distanceQuestion", { email, vector1 : formatVector1, vector2 : formatVector2, distance, result, val});
+  }
+  else if (val == false) {
+    const vector = new vectorCalculation.Vector();
+    const values = vectorCalculation.DistanceVectorOperations.findShortestDistanceToPoint(vector);
+    const result = null;
 
-  const { point, distance } = values;
-  const email = req.session.currentUserEmail;
-  const formattedVector = vectorCalculation.VectorOperations.formatVector(vector);
+    const { point, distance } = values;
+    const email = req.session.currentUserEmail;
+    const formattedVector = vectorCalculation.VectorOperations.formatVector(vector, "p", "");
 
-  res.render("distanceQuestion", { email, vector : formattedVector, point, distance, result});
+    res.render("distanceQuestion", { email, vector : formattedVector, point, distance, result, val});
+  }
 });
 
 app.post('/distance-check-answer', function(req, res) {
+  var val = req.body.val;
   const email = req.session.currentUserEmail;
   const userInput = req.body.userInput;
-  const vector = req.body.vector;
-  const point = req.body.point;
   const distance = req.body.distance;
   const dbName = "Prog_Distance";
-
+  
   const result = userInput === distance ? 'Correct!' : 'Incorrect!';
   if (result == 'Correct!'){
     var check = true;
@@ -305,8 +318,7 @@ app.post('/distance-check-answer', function(req, res) {
     var check = false;
   }
   updateProgTables(dbName, email, check)
-  res.render("distanceQuestion", { email, vector, point, distance, result})
-
+  res.render("distanceQuestion", { email, result});
 })
 
 app.post("/intersection-check-answer", function(req, res) {
@@ -597,6 +609,18 @@ function getAccountIDByEmail(email) {
       }
     );
   });
+}
+
+function getRandomBool() {
+  const randomDecimal = Math.random();
+  const randomNumber = 1 + randomDecimal;
+  const randomInteger = Math.round(randomNumber);
+  if (randomInteger == 1) {
+    return true;
+  }
+  else {
+    return false;
+  }
 }
 
 server.listen(3000,function(){ 
