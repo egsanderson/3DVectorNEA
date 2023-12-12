@@ -17,6 +17,24 @@ class Vector {
         this.scalar = null;
     }
 
+    calculateCoordinate() {
+        if (this.scalar !== null) {
+            const xCoordinate = this.position.x + this.scalar * this.direction.a;
+            const yCoordinate = this.position.y + this.scalar * this.direction.b;
+            const zCoordinate = this.position.z + this.scalar * this.direction.c;
+
+            this.coordinates = {
+                x: parseFloat(xCoordinate.toFixed(2)),
+                y: parseFloat(yCoordinate.toFixed(2)),
+                z: parseFloat(zCoordinate.toFixed(2)),
+            };
+
+            return `(${this.coordinates.x}, ${this.coordinates.y}, ${this.coordinates.z})`
+        } else {
+            console.log("Scalar component is null. Set a valid scalar value.");
+        }
+    }
+    
     getRandomNumber() {
         return Math.floor(Math.random() * 8);
     }
@@ -37,51 +55,95 @@ class DistanceVector extends Vector {
 }
 
 class VectorOperations {
-    static createEquations(v1, v2, p1, p2) {
-        const equs = [];
-
-        for (let i = 0; i <= 2; i++) {
-            equs[i] = [];
-            equs[i][0] = v1[i];
-            equs[i][1] = -1 * v2[i];
-            equs[i][2] = p2[i] - p1[i];
-        }
-
-        return equs;
-    }
-
-    static areVectorsParallel(v1, v2) {
-        const checks = v2.map((value, i) => {
-            if (value === 0) {
-                return Infinity;
-            } else if (v1[i] === 0) {
-                return 1;
-            } else {
-                return v1[i] / value;
+    static areParallel(vector1, vector2) {
+        const vector1Arr = [
+            vector1.direction.a,
+            vector1.direction.b,
+            vector1.direction.c
+        ];
+        const vector2Arr = [
+            vector2.direction.a,
+            vector2.direction.b,
+            vector2.direction.c
+        ];
+        console.log(vector1.direction)
+        console.log(vector2.direction)
+        for (let i = 0; i < vector1Arr.length; i++) {
+            if ((vector1Arr[i] === 0 && vector2Arr[i] !== 0) || (vector1Arr[i] !== 0 && vector2Arr[i] === 0)) {
+                return false;
             }
-        });
+            if (vector1Arr[i] !== 0 && vector2Arr[i] !== 0 && vector1Arr[i] % vector2Arr[i] !== 0) {
+                return false;
+            }
+        };
+    
+        return true;
+    } 
 
-        return checks.every((value) => value === checks[0]);
-    }
+    static calculateScalars(vector1, vector2) {
+        const lineDirection1 = [
+            vector1.direction.a,
+            vector1.direction.b,
+            vector1.direction.c,
+        ];
+        const linePosition1 = [
+            vector1.position.x,
+            vector1.position.y,
+            vector1.position.z,
+        ];
+        const lineDirection2 = [
+            vector2.direction.a,
+            vector2.direction.b,
+            vector2.direction.c,
+        ];
+        const linePosition2 = [
+            vector2.position.x,
+            vector2.position.y,
+            vector2.position.z,
+        ];
 
-    static calculateScalars(vector1, vector2, equs) {
-        const D = equs[0][0] * equs[1][1] - equs[1][0] * equs[0][1];
-        const Dp = equs[0][2] * equs[1][1] - equs[0][1] * equs[1][2];
-        const Dq = equs[0][0] * equs[1][2] - equs[0][2] * equs[1][0];
-
+        const equations = [
+            "(" + linePosition1[0] + " + p * " + lineDirection1[0] + ") = (" + linePosition2[0] + " + q * " + lineDirection2[0] + ")",
+            "(" + linePosition1[1] + " + p * " + lineDirection1[1] + ") = (" + linePosition2[1] + " + q * " + lineDirection2[1] + ")",
+        ];
+        const expression1 = "(" + linePosition1[2] + " + p * " + lineDirection1[2] + ")";
+        const expression2 = "(" + linePosition2[2] + " + q * " + lineDirection2[2] + ")";
+        
+        console.log("Equations:", equations);
+        
         try {
-            vector1.scalar = Dp / D;
-            vector2.scalar = Dq / D;
-        } catch (ex) {
-            throw ex;
+            var solutions = nerdamer.solveEquations(equations);
+        
+            if (solutions.length > 0) {
+                const roundedSolutions = solutions.map(([variable, value]) => [variable, parseFloat(value.toFixed(3))]);
+        
+                const p = parseFloat(roundedSolutions.find(([variable]) => variable === 'p')[1].toFixed(3));
+                const q = parseFloat(roundedSolutions.find(([variable]) => variable === 'q')[1].toFixed(3));
+        
+                console.log("p:", p);
+                console.log("q:", q);
+                
+                const resultExpression1 = nerdamer(expression1).evaluate({ p });
+                const resultExpression2 = nerdamer(expression2).evaluate({ q });
+        
+                if (resultExpression1.equals(resultExpression2)) {
+                    console.log("The expressions are the same.");
+                    console.log("Result:", resultExpression1.toString());
+                    vector1.scalar = p;
+                    vector2.scalar = q;
+                    return true;
+                } else {
+                    console.log("The expressions are not the same.");
+                    return false;
+                }
+            } else {
+                console.log("No solutions found for the system of equations.");
+                return false;
+            }
+        } catch (error) {
+            return false;
         }
-    }
-
-    static checkScalars(vector1, vector2, equs) {
-        const equation =
-            equs[2][0] * vector1.scalar + equs[2][1] * vector2.scalar;
-
-        return equation === equs[2][2];
+        
     }
 
     static formatVector(vector, Coeff, front) {
@@ -94,98 +156,16 @@ class VectorOperations {
 }
 
 class IntersectionVectorOperations extends VectorOperations {
-    static findIntersection(v1, p1, v2, p2, scalar) {
-        const intersection = [[], []];
-
-        for (let i = 0; i <= 2; i++) {
-            intersection[0][i] = p1[i] + scalar[0] * v1[i];
-            intersection[1][i] = p2[i] + scalar[1] * v2[i];
-        }
-
-        const check = intersection[0].every(
-            (value, j) => value === intersection[1][j]
-        );
-
-        if (!check) {
-            console.log("Error");
-            return null;
-        }
-
-        return intersection;
-    }
-    
-    static calculateCoordinates(vector1, vector2, scalar) {
-        const intersection = IntersectionVectorOperations.findIntersection(
-            [vector1.direction.a, vector1.direction.b, vector1.direction.c],
-            [vector1.position.x, vector1.position.y, vector1.position.z],
-            [vector2.direction.a, vector2.direction.b, vector2.direction.c],
-            [vector2.position.x, vector2.position.y, vector2.position.z],
-            [vector1.scalar, vector2.scalar]
-        );
-
-        for (let i = 0; i <= 2; i++) {
-            if (
-                typeof intersection[0][i] === "number" &&
-                !Number.isInteger(intersection[0][i])
-            ) {
-                intersection[0][i] = parseFloat(
-                    intersection[0][i].toFixed(2)
-                );
-            }
-        }
-
-        return `(${intersection[0][0]}, ${intersection[0][1]}, ${intersection[0][2]})`;
-    }
-
     static doVectorsIntersect(vector1, vector2) {
-        const vector1Position = [
-            vector1.position.x,
-            vector1.position.y,
-            vector1.position.z,
-        ];
-        const vector1Direction = [
-            vector1.direction.a,
-            vector1.direction.b,
-            vector1.direction.c,
-        ];
-
-        const vector2Position = [
-            vector2.position.x,
-            vector2.position.y,
-            vector2.position.z,
-        ];
-        const vector2Direction = [
-            vector2.direction.a,
-            vector2.direction.b,
-            vector2.direction.c,
-        ];
-
-        const equs = VectorOperations.createEquations(
-            vector1Direction,
-            vector2Direction,
-            vector1Position,
-            vector2Position
-        );
-
-        const isParallel = VectorOperations.areVectorsParallel(
-            vector1Direction,
-            vector2Direction
-        );
+        const isParallel = VectorOperations.areParallel(vector1,vector2);
 
         if (isParallel) {
             console.log("These vectors are parallel and do not intersect.");
             return false;
         } else {
-            VectorOperations.calculateScalars(vector1, vector2, equs);
+            const result = VectorOperations.calculateScalars(vector1, vector2) 
 
-            if (VectorOperations.checkScalars(vector1, vector2, equs)) {
-                console.log(`Scalar for vector1 (p) = ${vector1.scalar}`);
-                console.log(`Scalar for vector2 (q) = ${vector2.scalar}`);
-                return true;
-            } else {
-                console.log("These vectors are skew.");
-                return false;
-            }
+            return result;         
         }
     }
 
@@ -208,9 +188,15 @@ class IntersectionVectorOperations extends VectorOperations {
 
             const vector1Equation = IntersectionVectorOperations.calculateVectorEquation(vector1, 1);
             const vector2Equation = IntersectionVectorOperations.calculateVectorEquation(vector2, 2);
-            const coordinates = IntersectionVectorOperations.calculateCoordinates(vector1, vector2, [vector1.scalar, vector2.scalar]);
+            const coordinates1 = vector1.calculateCoordinate()
+            const coordinates2 = vector2.calculateCoordinate()
 
-            return { vector1: vector1Equation, vector2: vector2Equation, coordinates: coordinates };
+            if (coordinates1 == coordinates2) {
+                return { vector1: vector1Equation, vector2: vector2Equation, coordinates: coordinates1 };
+            }
+            else {
+                return tryCreateVectors()
+            }
         }
 
         return tryCreateVectors();
