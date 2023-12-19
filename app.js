@@ -68,39 +68,82 @@ app.use((req, res, next) => {
   
 app.post('/add', (req, res) => {
   const email = req.body.email;
-  if (!email || email.indexOf('@') === -1) {
-    req.session.errorMessage = 'Invalid email format. Please enter a valid email address.'
-    res.redirect("/createAccount-page")
-  }
-  db.serialize(() => {
-    db.run(
-      'INSERT INTO Accounts(Forename, Surname, Email, Password, Classroom, AccountType) VALUES (?, ?, ?, ?, ?, ?)',
-      [req.body.forename, req.body.surname, req.body.email, req.body.password, null, req.body.account_type],
-      function (err) {
-      if (err) {
-        if (err.message.includes('UNIQUE constraint failed')) {
-          req.session.errorMessage = "The email already exists"
-          console.log("The email already exists")
-          res.redirect('/createAccount-page');
-        } else {
-          req.session.errorMessage = err.message
-          console.log(err.message)
-          res.redirect('/createAccount-page');
-        }
-      } else {
-        console.log(`New ${req.body.account_type} has been added`);
-        req.session.currentUserEmail = email; 
 
-        ProgessDatabase(this.lastID);
-        if (req.body.account_type == "teacher"){
-          classCode = createClassCode()
-          setClassCode(classCode, req.body.email)
+  if (!email || email.indexOf('@') === -1) {
+    req.session.errorMessage = 'Invalid email format. Please enter a valid email address.';
+    res.render('createAccount', { errorMessage: req.session.errorMessage });
+  }
+
+  const accountType = req.body.account_type;
+
+  if (accountType === "teacher") {
+    const classCode = createClassCode();
+
+    db.serialize(() => {
+      db.run(
+        'INSERT INTO Teacher(Forename, Surname, Email, Password) VALUES (?, ?, ?, ?)',
+        [req.body.forename, req.body.surname, req.body.email, req.body.password],
+        function (err) {
+          if (err) {
+            if (err.message.includes('UNIQUE constraint failed')) {
+              req.session.errorMessage = "The email already exists";
+              console.log("The email already exists");
+              res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
+            } else {
+              req.session.errorMessage = err.message;
+              console.log(err.message);
+              res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
+            }
+          } else {
+            getTeacherID(email)
+              .then((teacherID) => {
+                db.run('INSERT INTO Classcode(ClasscodeID, TeacherID) VALUES (?, ?)',
+                  [classCode, teacherID],
+                  (err) => {
+                    if (err) {
+                      req.session.errorMessage = err.message;
+                      console.log(err.message);
+                      res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
+                    } else {
+                      console.log(`New ${req.body.account_type} has been added`);
+                      req.session.currentUserEmail = email;
+                      res.redirect('/');
+                    }
+                  });
+              })
+              .catch((err) => {
+                req.session.errorMessage = err.message;
+                console.log(err.message);
+                res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
+              });
+          }
         }
-        res.render('classroomCodePopup.ejs', { email: req.body.email });
-      }
+      );
     });
-  });
+  } else {
+    db.run('INSERT INTO Student(Forename, Surname, Email, Password) VALUES (?, ?, ?, ?)',
+      [req.body.forename, req.body.surname, req.body.email, req.body.password],
+      function (err) {
+        if (err) {
+          if (err.message.includes('UNIQUE constraint failed')) {
+            req.session.errorMessage = "The email already exists";
+            console.log("The email already exists");
+            res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
+          } else {
+            req.session.errorMessage = err.message;
+            console.log(err.message);
+            res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
+          }
+        } else {
+          console.log(`New ${req.body.account_type} has been added`);
+          req.session.currentUserEmail = email;
+          ProgessDatabase(this.lastID);
+          res.render('classroomCodePopup.ejs', { email: req.body.email });
+        }
+      });
+  }
 });
+
 
 // app.post('/update', function (req, res) {
 //   if (req.body.password1 != req.body.password2){
@@ -192,13 +235,13 @@ app.post('/login', (req, res) => {
   currentUserEmail = email;
 
   studentOrTeacher(email)
-    .then((accounttype) => checkPassword(email, password).then((match) => ({ accounttype, match })))
-    .then(({ accounttype, match }) => {
+    .then((accountType) => checkPassword(email, password, accountType).then((match) => ({ accountType, match })))
+    .then(({ accountType, match }) => {
       if (match) {
         req.session.currentUserEmail = email;
-        if (accounttype === 'student') {
+        if (accountType && accountType.toLowerCase() === 'student') {
           res.render('studentHome', { email });
-        } else if (accounttype === 'teacher') {
+        } else if (accountType && accountType.toLowerCase() === 'teacher') {
           res.render('otherForms', { email });
         } else {
           res.render('login', { errorMessage: 'No Match' });
@@ -246,7 +289,7 @@ app.get('/draw-page', (req,res) => {
 
 app.post('/studentAddCode', function(req, res) {
   console.log(req.body.classCode)
-  classCode = req.body.classCode
+  const classCode = req.body.classCode
   const email = req.session.currentUserEmail;
 
   setClassCode(classCode, email)
@@ -277,6 +320,24 @@ app.get('/intersection-questions', (req, res) => {
   res.render("intersectionQuestion", { email, vector1, vector2, coordinates, result });
 });
 
+app.post("/intersection-check-answer", function(req, res) {
+  const email = req.session.currentUserEmail;
+  const userInput = req.body.userInput;
+  const vector1 = req.body.vector1;
+  const vector2 = req.body.vector2;
+  const coordinates = req.body.coordinates;
+  const dbName = "Prog_Intersection";
+  const result = userInput === coordinates ? 'Correct!' : 'Incorrect!';
+  if (result == 'Correct!'){
+    var check = true;
+  }
+  else{
+    var check = false;
+  }
+  updateProgTables(dbName, email, check)
+  res.render("intersectionQuestion", { email, vector1, vector2, coordinates, result})
+});
+
 app.get('/distance-questions', (req, res) => {
   var val = getRandomBool()
   console.log(val)
@@ -297,14 +358,13 @@ app.get('/distance-questions', (req, res) => {
 
     const { point, distance } = values;
     const email = req.session.currentUserEmail;
-    const formattedVector = vectorCalculation.VectorOperations.formatVector(vector, "p", "");
+    const formattedVector = vector.formatVector("p", "");
 
     res.render("distanceQuestion", { email, vector : formattedVector, point, distance, result, val});
   }
 });
 
 app.post('/distance-check-answer', function(req, res) {
-  var val = req.body.val;
   const email = req.session.currentUserEmail;
   const userInput = req.body.userInput;
   const distance = req.body.distance;
@@ -321,13 +381,23 @@ app.post('/distance-check-answer', function(req, res) {
   res.render("distanceQuestion", { email, result});
 })
 
-app.post("/intersection-check-answer", function(req, res) {
+app.get('/plane-questions', (req, res) => {
+  var vector = new vectorCalculation.Vector()
+  const values = vectorCalculation.PlaneVectorOperations.findPlaneIntersectionWithLine(vector);
+  const {  formattedVector, formattedPlane, coordinates  } = values;
+  const email = req.session.currentUserEmail;
+  const result = null;
+
+  res.render("planeQuestion", {email, vector: formattedVector, plane: formattedPlane, coordinates, result})
+});
+
+app.post('/plane-check-answer', function(req, res) {
+  // var val = req.body.val;
   const email = req.session.currentUserEmail;
   const userInput = req.body.userInput;
-  const vector1 = req.body.vector1;
-  const vector2 = req.body.vector2;
   const coordinates = req.body.coordinates;
-  const dbName = "Prog_Intersection";
+  const dbName = "Prog_Planes";
+  
   const result = userInput === coordinates ? 'Correct!' : 'Incorrect!';
   if (result == 'Correct!'){
     var check = true;
@@ -336,27 +406,16 @@ app.post("/intersection-check-answer", function(req, res) {
     var check = false;
   }
   updateProgTables(dbName, email, check)
-  res.render("intersectionQuestion", { email, vector1, vector2, coordinates, result})
-});
-
-app.get('/close', function(req,res){
-  db.close((err) => {
-    if (err) {
-      res.send('There is some error in closing the database');
-      return console.error(err.message);
-    }
-    console.log('Closing the database connection.');
-    res.send('Database connection successfully closed');
-  });
-});
+  res.render("planeQuestion", { email, result});
+})
 
 app.get('/studentProgress', async (req, res) => {
   const email = req.session.currentUserEmail;
   console.log(email);
 
-  const accountID = await getAccountIDByEmail(email);
+  const studentID = await getStudentIDByEmail(email);
 
-  if (accountID === null) {
+  if (studentID === null) {
     res.status(404).send('Account not found');
     return;
   }
@@ -366,7 +425,7 @@ app.get('/studentProgress', async (req, res) => {
 
   async function getProgressData(table, callback) {
     try {
-      const progressID = await getProgressID(accountID);
+      const progressID = await getProgressID(studentID);
 
       if (progressID !== null) {
         db.get(
@@ -418,13 +477,13 @@ app.get('/studentHomePage',(req, res) => {
   res.render('studentHome', {email})
 });
 
-function ProgessDatabase(AccountsID) {
+function ProgessDatabase(StudentID) {
   let ProgressID;
 
   db.serialize(() => {
     db.run(
-      `INSERT INTO Progress (AccountID, QuestionsAttempted, CorrectAnswers) VALUES (?, ?, ?)`,
-      [AccountsID, 0, 0],
+      `INSERT INTO Progress (StudentID, QuestionsAttempted, CorrectAnswers) VALUES (?, ?, ?)`,
+      [StudentID, 0, 0],
       function (err) {
         if (err) {
           console.log(err);
@@ -461,13 +520,13 @@ function ProgessDatabase(AccountsID) {
 }
 
 function updateProgTables(tableName, email, correct) {
-  getAccountIDByEmail(email)
-    .then((accountID) => {
-      if (accountID !== null) {
-        console.log(`AccountID for ${email}: ${accountID}`);
-        return getProgressID(accountID);
+  getStudentIDByEmail(email)
+    .then((StudentID) => {
+      if (StudentID !== null) {
+        console.log(`StudentID for ${email}: ${StudentID}`);
+        return getProgressID(StudentID);
       } else {
-        console.log(`No AccountID found for ${email}`);
+        console.log(`No StudentID found for ${email}`);
         return Promise.resolve(null);
       }
     })
@@ -518,22 +577,6 @@ function updateProgTables(tableName, email, correct) {
     });
 }
 
-function checkPassword(email, password) {
-  return new Promise((resolve, reject) => {
-    db.get('SELECT Password FROM Accounts WHERE Email = ?', [email], (err, row) => {
-      if (err) {
-        reject(err);
-      } else {
-        if (row && password === row.Password) {
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-      }
-    });
-  });
-}
-
 function createClassCode(){
   characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
   code = ''
@@ -545,7 +588,7 @@ function createClassCode(){
 }
 
 function setClassCode(classCode, email){
-  db.run('UPDATE Accounts SET Classroom = ? WHERE Email = ?',
+  db.run('UPDATE Student SET ClasscodeID = ? WHERE Email = ?',
   [classCode, email], function (err) {
     if (err) {
       console.error(err);
@@ -555,14 +598,46 @@ function setClassCode(classCode, email){
   });
 }
 
+function checkPassword(email, password, tableName) {
+  return new Promise((resolve, reject) => {
+    if (!tableName) {
+      resolve(false);
+    } else {
+      db.get(`SELECT Password FROM ${tableName} WHERE Email = ?`, [email], (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          if (row && password === row.Password) {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        }
+      });
+    }
+  });
+}
+
 function studentOrTeacher(email) {
   return new Promise((resolve, reject) => {
-    db.get('SELECT AccountType FROM Accounts WHERE Email = ?', [email], (err, row) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(row ? row.AccountType : null);
-      }
+    db.serialize(() => {
+      db.get('SELECT Password FROM Teacher WHERE Email = ?', [email], (err, teacherRow) => {
+        if (err) {
+          reject(err);
+        } else if (teacherRow) {
+          resolve('Teacher');
+        } else {
+          db.get('SELECT Password FROM Student WHERE Email = ?', [email], (err, studentRow) => {
+            if (err) {
+              reject(err);
+            } else if (studentRow) {
+              resolve('Student');
+            } else {
+              resolve(null);
+            }
+          });
+        }
+      });
     });
   });
 }
@@ -579,11 +654,11 @@ function getName(email) {
     });
 }
 
-function getProgressID(accountID) {
+function getProgressID(StudentID) {
   return new Promise((resolve, reject) => {
     db.get(
-      'SELECT ProgressID FROM Progress WHERE AccountID = ?',
-      [accountID],
+      'SELECT ProgressID FROM Progress WHERE StudentID = ?',
+      [StudentID],
       (err, row) => {
         if (err) {
           reject(err);
@@ -595,16 +670,32 @@ function getProgressID(accountID) {
   });
 }
 
-function getAccountIDByEmail(email) {
+function getStudentIDByEmail(email) {
   return new Promise((resolve, reject) => {
     db.get(
-      'SELECT AccountID FROM Accounts WHERE Email = ?',
+      'SELECT StudentID FROM Student WHERE Email = ?',
       [email],
       (err, row) => {
         if (err) {
           reject(err);
         } else {
-          resolve(row ? row.AccountID : null);
+          resolve(row ? row.StudentID : null);
+        }
+      }
+    );
+  });
+}
+
+function getTeacherID(email) {
+  return new Promise((resolve, reject) => {
+    db.get(
+      'SELECT TeacherID FROM Teacher WHERE Email = ?',
+      [email],
+      (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(row ? row.TeacherID : null);
         }
       }
     );

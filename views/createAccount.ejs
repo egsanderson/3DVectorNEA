@@ -15,13 +15,13 @@
         </ul>
         <div></div>
       </nav>
-        [/ if (errorMessage) { /]
-          <p style="color: red;">[/- errorMessage /]</p>
-        [/ } /]
         <div id="registration-container">
           <form id="registration-form" action="/add" method="POST">
             <fieldset>
               <h3>Create a [/- accountType /] account</h3> 
+              [/ if (errorMessage) { /]
+                <p style="color: red;">[/- errorMessage /]</p>
+              [/ } /]
               <input type="hidden" name="account_type" value="[/- accountType /]">
               <label>First Name</label>
               <input type="text" id="forename" name="forename" required>

@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // const profileButton = document.getElementById("profileButton");
   const intersectionButton = document.getElementById("intersectionButton");
   const distanceButton = document.getElementById("distanceButton");
+  const planesButton = document.getElementById("planesButton")
 
   const logoutButton = document.getElementById('logoutButton')
   if (loginButton) {
@@ -27,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   if (drawButton) {
     drawButton.addEventListener("click", function () {
-      window.location.href = "/draw-page";
+        window.location.href = "/draw-page";
     });
   }
   if (StudentprofileButton) {
@@ -43,6 +44,11 @@ document.addEventListener("DOMContentLoaded", function () {
   if (distanceButton) {
     distanceButton.addEventListener("click", function () {
       window.location.href = "/distance-questions";
+    });
+  }
+  if (planesButton) {
+    planesButton.addEventListener("click", function () {
+      window.location.href = "/plane-questions";
     });
   }
   if (logoutButton) {

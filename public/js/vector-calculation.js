@@ -38,6 +38,14 @@ class Vector {
     getRandomNumber() {
         return Math.floor(Math.random() * 8);
     }
+
+    formatVector(Coeff, front) {
+        const { x, y, z } = this.position;
+        const { a, b, c } = this.direction;
+        const scalarCoeff = Coeff
+        return `${front}r = (${x}, ${y}, ${z}) + ${scalarCoeff}(${a}, ${b}, ${c})`;
+    }
+
 }
 
 class DistanceVector extends Vector {
@@ -54,6 +62,34 @@ class DistanceVector extends Vector {
     }
 }
 
+class Planes extends Vector {
+    constructor () {
+        super();
+        this.position = {
+            x: this.getRandomNumber(),
+            y: this.getRandomNumber(),
+            z: this.getRandomNumber(),
+        }
+        this.direction1 = {
+            a: this.getRandomNumber(),
+            b: this.getRandomNumber(),
+            c: this.getRandomNumber(),
+        }
+        this.direction2 = {
+            d: this.getRandomNumber(),
+            e: this.getRandomNumber(),
+            f: this.getRandomNumber(),
+        }
+    }
+
+    formatPlane(Coeff1, Coeff2, front) {
+        const { x, y, z } = this.position;
+        const { a, b, c } = this.direction1;
+        const { d, e, f} = this.direction2;
+        return `${front}r = (${x}, ${y}, ${z}) + ${Coeff1}(${a}, ${b}, ${c}) + ${Coeff2}(${d}, ${e}, ${f})`;
+    }
+}
+
 class VectorOperations {
     static areParallel(vector1, vector2) {
         const vector1Arr = [
@@ -66,8 +102,6 @@ class VectorOperations {
             vector2.direction.b,
             vector2.direction.c
         ];
-        console.log(vector1.direction)
-        console.log(vector2.direction)
         for (let i = 0; i < vector1Arr.length; i++) {
             if ((vector1Arr[i] === 0 && vector2Arr[i] !== 0) || (vector1Arr[i] !== 0 && vector2Arr[i] === 0)) {
                 return false;
@@ -108,9 +142,7 @@ class VectorOperations {
         ];
         const expression1 = "(" + linePosition1[2] + " + p * " + lineDirection1[2] + ")";
         const expression2 = "(" + linePosition2[2] + " + q * " + lineDirection2[2] + ")";
-        
-        console.log("Equations:", equations);
-        
+                
         try {
             var solutions = nerdamer.solveEquations(equations);
         
@@ -119,38 +151,24 @@ class VectorOperations {
         
                 const p = parseFloat(roundedSolutions.find(([variable]) => variable === 'p')[1].toFixed(3));
                 const q = parseFloat(roundedSolutions.find(([variable]) => variable === 'q')[1].toFixed(3));
-        
-                console.log("p:", p);
-                console.log("q:", q);
                 
                 const resultExpression1 = nerdamer(expression1).evaluate({ p });
                 const resultExpression2 = nerdamer(expression2).evaluate({ q });
         
                 if (resultExpression1.equals(resultExpression2)) {
-                    console.log("The expressions are the same.");
-                    console.log("Result:", resultExpression1.toString());
                     vector1.scalar = p;
                     vector2.scalar = q;
                     return true;
                 } else {
-                    console.log("The expressions are not the same.");
                     return false;
                 }
             } else {
-                console.log("No solutions found for the system of equations.");
                 return false;
             }
         } catch (error) {
             return false;
         }
         
-    }
-
-    static formatVector(vector, Coeff, front) {
-        const { x, y, z } = vector.position;
-        const { a, b, c } = vector.direction;
-        const scalarCoeff = Coeff
-        return `${front}r = (${x}, ${y}, ${z}) + ${scalarCoeff}(${a}, ${b}, ${c})`;
     }
 
 }
@@ -160,7 +178,6 @@ class IntersectionVectorOperations extends VectorOperations {
         const isParallel = VectorOperations.areParallel(vector1,vector2);
 
         if (isParallel) {
-            console.log("These vectors are parallel and do not intersect.");
             return false;
         } else {
             const result = VectorOperations.calculateScalars(vector1, vector2) 
@@ -173,7 +190,6 @@ class IntersectionVectorOperations extends VectorOperations {
         const { x, y, z } = vector.position;
         const { a, b, c } = vector.direction;
         const vectorCoefficient = val === 1 ? "p" : "q";
-        console.log(`l${val}: r = (${x},${y},${z}) + ${vectorCoefficient}(${a},${b},${c})`);
         return `l${val}: r = (${x},${y},${z}) + ${vectorCoefficient}(${a},${b},${c})`;
     }
 
@@ -203,7 +219,6 @@ class IntersectionVectorOperations extends VectorOperations {
     }
 
 }
-
 
 class DistanceVectorOperations extends VectorOperations {
     calculateScalar(vector) {
@@ -239,11 +254,9 @@ class DistanceVectorOperations extends VectorOperations {
             "(" + AB[2] + " * " + lineDirection[2] + ")"
         ];
     
-        console.log("Equating scalar product to 0 and solving for p:");
         const equation = scalarProduct.join(" + ") + " = 0";
 
         var p = nerdamer.solve(equation, 'p');
-        console.log(p.toString)
 
         const simplifyAndEvaluate = (expression) => {
             try {
@@ -327,13 +340,10 @@ class DistanceVectorOperations extends VectorOperations {
 
         var solutions = nerdamer.solveEquations([equation1, equation2],);
 
-        console.log(solutions);
         const roundedSolutions = solutions.map(([variable, value]) => [variable, parseFloat(value.toFixed(3))]);
 
         const p = parseFloat(roundedSolutions.find(([variable]) => variable === 'p')[1].toFixed(3));
         const q = parseFloat(roundedSolutions.find(([variable]) => variable === 'q')[1].toFixed(3));
-        console.log(p)
-        console.log(q)
 
         const simplifyAndEvaluate = (expression) => {
             try {
@@ -355,7 +365,6 @@ class DistanceVectorOperations extends VectorOperations {
             y: simplifyAndEvaluate(expresssions[1]),
             z: simplifyAndEvaluate(expresssions[2]),
         };
-        console.log(distanceVector)
         return {
             distanceVector: distanceVector
         }
@@ -383,8 +392,8 @@ class DistanceVectorOperations extends VectorOperations {
             Math.pow(nerdamer(result.distanceVector.y).evaluate(), 2)
         );
 
-        const formatVector1 = VectorOperations.formatVector(vector1, "p", "l1: ");
-        const formatVector2 = VectorOperations.formatVector(vector2, "q", "l2: ");
+        const formatVector1 = vector1.formatVector("p", "l1: ");
+        const formatVector2 = vector2.formatVector("q", "l2: ");
 
         const formattedDistance = distance.toFixed(3);
 
@@ -395,20 +404,69 @@ class DistanceVectorOperations extends VectorOperations {
     static findShortestDistanceToPoint(vector) {
         const distanceVector = new DistanceVectorOperations();
         const result = distanceVector.calculateShortestDistanceToPoint(vector);
-        console.log(`Point on the line: ${result.point}`);
-        console.log(`Shortest distance from the point to the line: ${result.distance}`);
         return result;
     }
 
     static findShortestDistanceBetweenLines(vector1, vector2) {
         const distanceVector = new DistanceVectorOperations();
         const result = distanceVector.calculateShortestDistanceBetweenLines(vector1, vector2);
-        console.log(`Vector 1 on the line: ${result.formatVector1}`);
-        console.log(`Vector 2 on the line: ${result.formatVector2}`);
-        console.log(`Shortest distance from the point to the line: ${result.distance}`);
         return result;
     }
 }
 
+class PlaneVectorOperations extends VectorOperations {
+    calcuateIntersection(vector, plane) {
+        var OA = [
+            "(" + vector.position.x + " +  p * " + vector.direction.a + ")",
+            "(" + vector.position.y + " +  p * " + vector.direction.b + ")",
+            "(" + vector.position.z + " +  p * " + vector.direction.c + ")",
+        ];
+        const OB = [
+            "(" + plane.position.x + " + (q * " + plane.direction1.a + ") + (r * " + plane.direction2.d + "))",
+            "(" + plane.position.y + " + (q * " + plane.direction1.b + ") + (r * " + plane.direction2.e + "))",
+            "(" + plane.position.z + " + (q * " + plane.direction1.c + ") + (r * " + plane.direction2.f + "))",
+        ];
+        
+        const equation1 = OA[0] + " = " + OB[0];
+        const equation2 = OA[1] + " = " + OB[1];
+        const equation3 = OA[2] + " = " + OB[2];
+        try {
+            const solution = nerdamer.solveEquations([equation1, equation2, equation3]);
+            console.log(solution)
+    
+            const pValuePair = solution.find(entry => entry[0] === 'p');
+            const pValue = pValuePair ? parseFloat(pValuePair[1]) : null;
+            
+            vector.scalar = pValue;
+            const coordinates = vector.calculateCoordinate()
+    
+            return coordinates
+        }
+        catch {
+            console.log("no solution");
+            return null
+        }
 
-module.exports = {Vector, DistanceVector, VectorOperations, IntersectionVectorOperations, DistanceVectorOperations };
+    }
+
+    static findPlaneIntersectionWithLine(vector) {
+        try {
+            var plane = new Planes();
+            const planeVector = new PlaneVectorOperations();
+            var coordinates = planeVector.calcuateIntersection(vector, plane);
+            if (coordinates == null) {
+                coordinates = this.findPlaneIntersectionWithLine(vector);
+            }
+            const formattedVector = vector.formatVector("p", "l1: ");
+            const formattedPlane = plane.formatPlane("q", "r", "r: ");
+            return { formattedVector, formattedPlane, coordinates };
+        } catch (error) {
+            console.log(`Error: ${error.message}. Retrying...`);
+            const newVector = new Vector();
+            return this.findPlaneIntersectionWithLine(newVector);
+        }
+    }
+}
+
+
+module.exports = {Vector, DistanceVector, Planes, VectorOperations, IntersectionVectorOperations, DistanceVectorOperations, PlaneVectorOperations };
