@@ -29,6 +29,10 @@ nav#studentNav{
     background-color: #0a3273;
 }
 
+nav#teacherNav{
+    background-color: #063061;
+}
+
 .dropdown {
     display: inline-block;
 }

@@ -9,7 +9,7 @@ var bodyParser = require('body-parser');
 var helmet = require('helmet');
 var rateLimit = require("express-rate-limit");
 const three = require('three');
-const nerdamer = require('nerdamer');
+//const nerdamer = require('nerdamer');
 
 
 const ejs = require("ejs");
@@ -39,7 +39,6 @@ app.use(session({
 }));
 
 var db = new sqlite3.Database('./database/UserAccounts');
-
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.set('view engine', 'ejs');
@@ -242,7 +241,7 @@ app.post('/login', (req, res) => {
         if (accountType && accountType.toLowerCase() === 'student') {
           res.render('studentHome', { email });
         } else if (accountType && accountType.toLowerCase() === 'teacher') {
-          res.render('otherForms', { email });
+          res.render('teacherHome', { email });
         } else {
           res.render('login', { errorMessage: 'No Match' });
         }
