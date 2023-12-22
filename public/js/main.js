@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const StudentprogressButton = document.getElementById("StudentprogressButton");
   //const questionButton = document.getElementById("questionsButton");
   const StudentprofileButton = document.getElementById("StudentprofileButton");
-  // const profileButton = document.getElementById("profileButton");
+  const ClassprogressButton = document.getElementById("ClassprogressButton");
   const intersectionButton = document.getElementById("intersectionButton");
   const distanceButton = document.getElementById("distanceButton");
   const planesButton = document.getElementById("planesButton")
@@ -34,6 +34,11 @@ document.addEventListener("DOMContentLoaded", function () {
   if (StudentprofileButton) {
     StudentprofileButton.addEventListener("click", function () {
       window.location.href = "/studentProfile-page";
+    });
+  }
+  if (ClassprogressButton) {
+    ClassprogressButton.addEventListener("click", function () {
+      window.location.href = "/teacherProgress";
     });
   }
   if (intersectionButton) {

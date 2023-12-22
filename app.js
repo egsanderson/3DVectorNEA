@@ -410,7 +410,6 @@ app.post('/plane-check-answer', function(req, res) {
 
 app.get('/studentProgress', async (req, res) => {
   const email = req.session.currentUserEmail;
-  console.log(email);
 
   const studentID = await getStudentIDByEmail(email);
 
@@ -469,6 +468,25 @@ app.get('/studentProgress', async (req, res) => {
   }
 
   getAllProgressData();
+});
+
+app.get('/teacherProgress', async (req, res) => {
+  const email = req.session.currentUserEmail;
+
+  try {
+    const students = await getAllStudentsLinkedToTeacher(email);
+    console.log("Linked Students:", students);
+
+    const studentIDs = students.map((student) => student.StudentID);
+    console.log("Student IDs:", studentIDs);
+
+    const studentProgressData = await getStudentsProgressData(studentIDs, students);
+    console.log(studentProgressData);
+    res.render('teacherProgressPage', { studentProgressData, email });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
 app.get('/studentHomePage',(req, res) => {
@@ -695,6 +713,123 @@ function getTeacherID(email) {
           reject(err);
         } else {
           resolve(row ? row.TeacherID : null);
+        }
+      }
+    );
+  });
+}
+
+async function getAllStudentsLinkedToTeacher(email) {
+  return getTeacherID(email)
+    .then((teacherID) => {
+      if (teacherID) {
+        return getClasscodeIDByTeacherID(teacherID)
+          .then((classcodeID) => getStudentsByClasscodeID(classcodeID))
+          
+          .catch((err) => {
+            console.log("no students liked")
+            throw err;
+          });
+      } else {
+        return null;
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      throw err;
+    });
+}
+
+function getClasscodeIDByTeacherID(teacherID) {
+  return new Promise((resolve, reject) => {
+    db.get(
+      'SELECT ClasscodeID FROM Classcode WHERE TeacherID = ?',
+      [teacherID],
+      (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(row ? row.ClasscodeID : null);
+        }
+      }
+    );
+  });
+}
+
+function getStudentsByClasscodeID(classcodeID) {
+  return new Promise((resolve, reject) => {
+    db.all(
+      'SELECT Forename, Surname, StudentID FROM Student WHERE ClasscodeID = ?',
+      [classcodeID],
+      (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rows);
+        }
+      }
+    );
+  });
+}
+
+async function getStudentsProgressData(studentIDs, students) {
+  try {
+    const progressData = [];
+    const tables = ["Progress","Prog_Intersection", "Prog_Distance", "Prog_Planes"];
+
+    for (const studentID of studentIDs) {
+      // Find the student information in the array
+      const studentInfo = students.find(student => student.StudentID === studentID);
+      
+      if (!studentInfo) {
+        // Handle the case where student information is not found
+        console.error(`Student information not found for ID: ${studentID}`);
+        continue;
+      }
+
+      const progressID = await getProgressID(studentID);
+
+      console.log(`Progress ID for ${studentID}:`, progressID);
+
+      if (progressID !== null) {
+        for (const table of tables) {
+          const row = await getTableProgressData(table, progressID);
+          console.log(`Progress Data for ${table}:`, row);
+          if (row) {
+            const totalQuestions = row.QuestionsAttempted;
+            const correctAnswers = row.CorrectAnswers;
+            const incorrectAnswers = totalQuestions - correctAnswers;
+
+            progressData.push({
+              studentID,
+              forename: studentInfo.Forename,
+              surname: studentInfo.Surname,
+              table,
+              correctAnswers,
+              incorrectAnswers,
+            });
+          }
+        }
+      }
+    }
+
+    return progressData;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+async function getTableProgressData(table, progressID) {
+  return new Promise((resolve, reject) => {
+    db.get(
+      `SELECT QuestionsAttempted, CorrectAnswers FROM ${table} WHERE ProgressID = ?`,
+      [progressID],
+      (err, row) => {
+        if (err) {
+          console.log(err);
+          reject(err);
+        } else {
+          resolve(row);
         }
       }
     );
