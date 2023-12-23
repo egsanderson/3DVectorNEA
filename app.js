@@ -104,7 +104,7 @@ app.post('/add', (req, res) => {
                     } else {
                       console.log(`New ${req.body.account_type} has been added`);
                       req.session.currentUserEmail = email;
-                      res.redirect('/');
+                      res.render('Home', { email, role: "Teacher" });
                     }
                   });
               })
@@ -237,9 +237,9 @@ app.post('/login', (req, res) => {
       if (match) {
         req.session.currentUserEmail = email;
         if (accountType && accountType.toLowerCase() === 'student') {
-          res.render('studentHome', { email });
+          res.render('home', { email, role: "Student" });
         } else if (accountType && accountType.toLowerCase() === 'teacher') {
-          res.render('teacherHome', { email });
+          res.render('home', { email, role: "Teacher" });
         } else {
           res.render('login', { errorMessage: 'No Match' });
         }
@@ -293,14 +293,13 @@ app.get('/draw-page', async (req, res) => {
   }
 });
 
-
 app.post('/studentAddCode', function(req, res) {
   console.log(req.body.classCode)
   const classCode = req.body.classCode
   const email = req.session.currentUserEmail;
 
   setClassCode(classCode, email)
- res.render("studentHome", {email : email})
+  res.render('home', { email, role: "Student" });
 });
 
 app.get('/studentProfile-page', function(req,res) {
@@ -498,9 +497,11 @@ app.get('/teacherProgress', async (req, res) => {
   }
 });
 
-app.get('/studentHomePage',(req, res) => {
-  const email = req.session.currentUserEmail
-  res.render('studentHome', {email})
+app.get('/HomePage',(req, res) => {
+    const email = req.session.currentUserEmail;
+    const role = studentOrTeacher(email);
+    console.log(role)
+    res.render('home', { email, role });
 });
 
 function ProgessDatabase(StudentID) {
