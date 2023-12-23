@@ -278,11 +278,21 @@ app.post('/accountType', function(req, res) {
     res.render('createAccount',{ errorMessage: req.session.errorMessage, accountType });
 });
 
-app.get('/draw-page', (req,res) => {
-  var email = req.session.currentUserEmail
-  req.session.errorMessage = req.session.errorMessage || null;
-  res.render('drawVectorGraphic', { errorMessage: req.session.errorMessage, email} );
-})
+app.get('/draw-page', async (req, res) => {
+  try {
+    const email = req.session.currentUserEmail;
+    const role = await studentOrTeacher(email);
+    console.log(role)
+    req.session.errorMessage = req.session.errorMessage || null;
+    res.render('drawVectorGraphic', { errorMessage: req.session.errorMessage, email, role });
+  } catch (error) {
+    // Handle errors
+    console.error(error);
+    req.session.errorMessage = "An error occurred while processing your request.";
+    res.redirect('/draw-page'); // Redirect to handle the error
+  }
+});
+
 
 app.post('/studentAddCode', function(req, res) {
   console.log(req.body.classCode)
