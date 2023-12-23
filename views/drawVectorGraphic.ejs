@@ -1,35 +1,88 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Your Template</title>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawing graphics</title>
     <link rel="icon" type="image/x-icon" href="../public/images/favicon.png">
     <link rel="stylesheet" href="../public/css/style.css">
-    <meta charset="UTF-8">
-  </head>
+    <script src="../public/js/main.js"></script>
+
+    <style>
+        #container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid #333;
+        }
+
+        #threejs-canvas {
+            flex: 1;
+            width: 70%;
+            height: 70%;
+            border-top: 1px solid #333;
+        }
+
+        .vector-input label {
+            margin-right: 5px;
+        }
+
+        #input-container {
+            padding: 10px;
+        }
+    </style></head>
+<body>
   <body>
     <nav id="studentNav">
-      <ul>
-          <li class="dropdown">
-              <a href="#" id="questionsButton">Questions</a>
-              <div class="dropdown-content">
-                  <a href="#" id="intersectionButton">Intersection</a>
-                  <a href="#" id="distanceButton">Distance</a>
-                  <a href="#" id="planesButton">Planes</a>
-              </div>
-          </li>
-          <li><a href="#" id="progressButton">Progress</a></li>
-          <li><a href="#" id="drawButton">Draw Vector</a></li>
-          <li><a href="#" id="profileButton">Profile - [/- email /]</a></li>
-      </ul>
-  </nav>
-    [/ if (errorMessage) { /]
-      <p style="color: red;">[/- errorMessage /]</p>
-    [/ } /]
-    <p>Draw</p>
-    <div id="threejs-container"></div>
+        <ul>
+            <li class="dropdown">
+                <a href="#" id="questionsButton">Questions</a>
+                <div class="dropdown-content">
+                    <a href="#" id="intersectionButton">Intersection</a>
+                    <a href="#" id="distanceButton">Distance</a>
+                    <a href="#" id="planesButton">Planes</a>
+                </div>
+            </li>
+            <li><a href="#" id="StudentprogressButton">Progress</a></li>
+            <li><a href="#" id="drawButton">Draw Vector</a></li>
+            <li class="dropdown">
+                <a href="#" id="profileButton">Profile - [/- email /]</a>
+                <div class="dropdown-content">
+                    <a href="#" id="StudentprofileButton">View Profile</a>
+                    <a href="#" id="logoutButton">Logout</a>
+                </div>
+            </li>
+        </ul>
+    </nav>
 
-    <!-- <script src="../public/js/threejs-scene.js" type="module"></script> -->
-    <script src="../public/dist/plane.js"></script>
+    <div id="input-container">
+        <label>Vector Equation (Line 1):</label>
+        <div class="vector-input">
+            <label>(x: ), (y: ), (z: ) + (a: ), (b: ), (c: )</label>
+            <br>
+            <label>X:</label>
+            <input type="number" id="xline" value="0">
+            <label>Y:</label>
+            <input type="number" id="yline" value="0">
+            <label>Z:</label>
+            <input type="number" id="zline" value="0">
+            <label>a:</label>
+            <input type="number" id="aline" value="1">
+            <label>b:</label>
+            <input type="number" id="bline" value="0">
+            <label>c:</label>
+            <input type="number" id="cline" value="0">
+        </div>
+    </div>
 
-  </body>
+    <div id="container">
+        <div id="threejs-canvas"></div>
+    </div>
+
+    <script src="../public/js/three.js"></script>
+    <script src="../public/js/graphics.js"></script>
+    
+</body>
 </html>

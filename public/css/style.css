@@ -66,10 +66,6 @@ nav#teacherNav{
     background-color: #111;
 }
 
-#questionsButton:hover {
-    background-color: #111;
-}
-
 #classCodeStudent {
     display: block;
     position: fixed;

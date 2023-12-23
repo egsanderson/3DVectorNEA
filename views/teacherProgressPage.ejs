@@ -16,7 +16,7 @@
   
       .student-section {
           text-align: center;
-          width: calc(25% - 20px); /* 25% width with some margin */
+          width: calc(25% - 20px);
           margin: 10px;
       }
   
@@ -76,7 +76,6 @@
             studentSection.appendChild(chartItem);
             chartContainer.appendChild(studentSection);
 
-            // Wait for the canvas element to be rendered before creating the chart
             setTimeout(function() {
                 new Chart(canvas, {
                     type: 'pie',

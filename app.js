@@ -8,8 +8,6 @@ var path = require("path");
 var bodyParser = require('body-parser');
 var helmet = require('helmet');
 var rateLimit = require("express-rate-limit");
-const three = require('three');
-//const nerdamer = require('nerdamer');
 
 
 const ejs = require("ejs");
@@ -297,7 +295,8 @@ app.post('/studentAddCode', function(req, res) {
 
 app.get('/studentProfile-page', function(req,res) {
   const email = req.session.currentUserEmail
-  getName(email)
+  const table = "Student";
+  getName(email, table)
   .then(userDetails => {
     if (userDetails) {
       const { forename, surname } = userDetails;
@@ -659,9 +658,9 @@ function studentOrTeacher(email) {
   });
 }
 
-function getName(email) {
+function getName(email, table) {
     return new Promise((resolve, reject) => {
-      db.get('SELECT Forename, Surname FROM Accounts WHERE Email = ?', [email], (err, row) => {
+      db.get(`SELECT Forename, Surname FROM ${table} WHERE Email = ?`, [email], (err, row) => {
         if (err) {
           reject(err);
         } else {
