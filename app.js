@@ -27,8 +27,6 @@ const limiter = rateLimit({
   max: 100
 });
 
-let currentUserEmail = null;
-
 app.use(express.static("public"));
 
 app.use(session({
@@ -114,7 +112,13 @@ app.post('/add', async (req, res) => {
                         res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
                       } else {
                         console.log(`New ${accountType} has been added`);
+                        //UPDATES
                         req.session.currentUserEmail = email;
+                        req.session.forename = req.body.forename;
+                        req.session.surname = req.body.surname;
+                        req.session.id = teacherID;
+                        req.session.classcode = classCode;
+                        //UPDATES
                         res.render('Home', { email, role: "Teacher" });
                       }
                     });
@@ -141,6 +145,9 @@ app.post('/add', async (req, res) => {
           } else {
             console.log(`New ${accountType} has been added`);
             req.session.currentUserEmail = email;
+            req.session.forename = req.body.forename;
+            req.session.surname = req.body.surname;
+            req.session.id = this.lastID;
             ProgessDatabase(this.lastID);
             res.render('classroomCodePopup.ejs', { email });
           }
@@ -172,6 +179,17 @@ app.post('/login', async (req, res) => {
 
     if (match) {
       req.session.currentUserEmail = email;
+      req.session.forename = user.Forename;
+      req.session.surname = user.Surname;
+      if (user.StudentID !== undefined) {
+        const studentID = await getStudentIDByEmail(email);
+        req.session.id = studentID;
+        req.session.classcode = user.ClasscodeID;
+      } else if (user.TeacherID !== undefined) {
+        req.session.id = user.TeacherID
+        const classcode = await getClasscodeIDByTeacherID(user.TeacherID);
+        req.session.classcode = classcode
+      }
       if (accountType && accountType.toLowerCase() === 'student') {
         res.render('home', { email, role: "Student" });
       } else if (accountType && accountType.toLowerCase() === 'teacher') {
@@ -238,22 +256,29 @@ app.post('/studentAddCode', function(req, res) {
 
 app.get('/studentProfile-page', function(req,res) {
   const email = req.session.currentUserEmail
-  const table = "Student";
-  getName(email, table)
-  .then(userDetails => {
-    if (userDetails) {
-      const { forename, surname } = userDetails;
-      res.render("studentProfile", {email, forename, surname})
-    } else {
-      console.log('no details found')
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    res.status(500).send('Internal Server Error');
-  });
+  //const table = "Student";
+  const forename = req.session.forename;
+  const surname = req.session.surname;
+  res.render("studentProfile", {email, forename, surname})
+
 });
 
+app.get('/teacherProfile-page', async function(req, res) {
+    try {
+      const email = req.session.currentUserEmail;
+      const val = "profile"
+      const forename = req.session.forename;
+      const surname = req.session.surname;
+      const classcode = req.session.classcode
+
+      res.render("teacherProfile", { email, forename, surname, classcode, val, resultString : null});
+
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).send('Internal Server Error');
+    }
+});
+  
 app.get('/intersection-questions', (req, res) => {
   const { vector1, vector2, coordinates } = vectorCalculation.IntersectionVectorOperations.getIntersectingVectorsAndCoordinates();
   const result = null;
@@ -379,9 +404,9 @@ app.post('/plane-check-answer', function(req, res) {
 
 app.get('/studentProgress', async (req, res) => {
   const email = req.session.currentUserEmail;
-
+  console.log(req.session.id)
   const studentID = await getStudentIDByEmail(email);
-
+  console.log(studentID)
   if (studentID === null) {
     res.status(404).send('Account not found');
     return;
@@ -439,6 +464,7 @@ app.get('/studentProgress', async (req, res) => {
   getAllProgressData();
 });
 
+
 app.get('/teacherProgress', async (req, res) => {
   const email = req.session.currentUserEmail;
 
@@ -472,6 +498,159 @@ app.get('/HomePage', (req, res) => {
       });
 });
 
+app.get('/viewStudents', async (req, res) => {
+  const email = req.session.currentUserEmail;
+  const forename = req.session.forename;
+  const surname = req.session.surname;
+  const val = "viewStudents";
+  try {
+      const rows = await getAllStudentDataForTeacher(email);
+      console.log(rows)
+      if (rows && rows.length > 0) {
+        const formattedStrings = rows.map(student => {
+          const fullName = `${student.Forename} ${student.Surname}`;
+          const email = student.Email;
+          return `${fullName} - ${email}`;
+        });
+        resultString = formattedStrings.join('<br>');
+      } else {
+        resultString = "You do not have any students linked to you yet";
+      }
+      console.log(resultString)
+      res.render("teacherProfile", { email, forename, surname, val, resultString });
+  } catch (error) {
+      console.error('Error:', error);
+      res.status(500).send('Internal Server Error');
+  }
+});
+
+app.get('/changeYourPassword', (req, res) => {
+  const email = req.session.currentUserEmail;
+  const forename = req.session.forename;
+  const surname = req.session.surname;
+  const val = "changeYourPassword";
+  res.render("teacherProfile", { email, forename, surname, val, resultString : null});
+
+});
+
+app.post('/changePassword', async (req, res) => {
+  const email = req.body.email;
+  const oldPassword = req.body.password;
+  const newPassword = req.body.newPassword;
+  const confirmNewPassword = req.body.confirmPassword;
+  const val = "changeYourPassword";
+  var resultString;
+  try {
+    const accountType = await studentOrTeacher(email);
+    const tableName = (accountType === 'Teacher') ? 'Teacher' : 'Student';
+    const user = await getUserByEmail(email, tableName);
+
+    console.log('Stored Hashed Password:', user.Password);
+
+    const oldPasswordMatch = await checkPassword(oldPassword, user.Password);
+
+    if (!oldPasswordMatch) {
+      resultString = 'Incorrect current password';
+      res.render("teacherProfile", { email, forename : req.session.forename, surname : req.session.surname, val, resultString});
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      resultString = 'New password and confirm new password do not match';
+      res.render("teacherProfile", { email, forename : req.session.forename, surname : req.session.surname, val, resultString});
+      return;
+    }
+    const hashedNewPassword = await hashPassword(newPassword);
+    db.get(`UPDATE ${tableName} SET Password = ? WHERE Email = ?`, [hashedNewPassword, email], function(err) {
+      if (err) {
+        resultString = err.message;
+        res.render("teacherProfile", { email, forename : req.session.forename, surname : req.session.surname, val, resultString});
+      }
+      else {
+        console.log('Password has been successfully changed');
+        res.render("teacherProfile", { email, forename : req.session.forename, surname : req.session.surname, val, resultString : "Sucessful!"});
+      }
+    });
+
+  } catch (err) {
+    console.error(err);
+    resultString = 'An error occurred while changing the password';
+    console.error(resultString);
+    res.render("teacherProfile", { email, forename : req.session.forename, surname : req.session.surname, val, resultString});
+  }
+});
+
+app.get('/deleteStudent', (req, res) => {
+  const val = "deleteStudent1";
+  const email = req.session.currentUserEmail;
+  const forename = req.session.forename;
+  const surname = req.session.surname;
+  res.render("teacherProfile", { email, forename, surname, val, resultString : null});
+});
+
+app.post('/deleteStudentCheck', async (req,res) => {
+  const studentEmail = req.body.email;
+  const email = req.session.currentUserEmail
+  const teacherClasscodeID = req.session.classcode;
+  const forename = req.session.forename
+  const surname = req.session.surname
+
+  try {
+    const studentInfo = await getUserByEmail(studentEmail, 'Student');
+
+    if (!studentInfo) {
+      const resultString = "That student doesn't exist.";
+      const val = "deleteStudent1";
+      res.render("teacherProfile", { email, forename, surname, val, resultString });
+      return;
+    }
+    if (studentInfo.ClasscodeID !== teacherClasscodeID) {
+      const resultString = "That student is not linked to you.";
+      const val = "deleteStudent1";
+      res.render("teacherProfile", { email, forename, surname, val, resultString });
+      return;
+    }
+    const formattedString = `${studentInfo.Forename} ${studentInfo.Surname} - ${studentInfo.Email}`;
+    const resultString = "Are you sure you wish to delete this student: " + formattedString + "<br>If you wish to continue then reenter students email";
+    const val = "deleteStudent2";
+    res.render("teacherProfile", { email, forename, surname, val, resultString });
+
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+app.post('/confirmDeleteStudent', async (req, res) => {
+  const confirmation = req.body.confirmation;
+  const studentEmail = req.body.Studentemail;
+  const forename = req.session.forename;
+  const surname = req.session.surname;
+  const val = "deleteStudent1";
+  const email = req.session.currentUserEmail
+  if (confirmation === 'no') {
+    const resultString = "Cancelled deletion.";
+    res.render("teacherProfile", { email, forename, surname, val, resultString });
+    return;
+  }
+  try {
+    db.get("DELETE From Student WHERE Email = ?", [studentEmail], function(err) {
+      if (err) {
+        resultString = err
+        res.render("teacherProfile", { email, forename, surname, val, resultString });
+      }
+      else {
+        const resultString = "Student deleted successfully.";
+        res.render("teacherProfile", { email, forename, surname, val, resultString });
+      }
+    })
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+
 const hashPassword = (password) => {
   return new Promise((resolve, reject) => {
     bcrypt.hash(password, 10, (err, hash) => {
@@ -483,6 +662,37 @@ const hashPassword = (password) => {
     });
   });
 };
+
+function getAllStudentDataForTeacher(email) {
+  return getTeacherID(email)
+    .then((teacherID) => {
+      return getClasscodeIDByTeacherID(teacherID);
+    })
+    .then((classcodeID) => {
+      return new Promise((resolve, reject) => {
+        if (!classcodeID) {
+          reject(new Error('ClasscodeID not found for the teacher.'));
+          return;
+        }
+
+        db.all(
+          'SELECT Forename, Surname, Email FROM Student WHERE ClasscodeID = ?',
+          [classcodeID],
+          (err, rows) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(rows);
+            }
+          }
+        );
+      });
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+      throw error;
+    });
+}
 
 function ProgessDatabase(StudentID) {
   let ProgressID;
@@ -650,18 +860,6 @@ function studentOrTeacher(email) {
   });
 }
 
-function getName(email, table) {
-    return new Promise((resolve, reject) => {
-      db.get(`SELECT Forename, Surname FROM ${table} WHERE Email = ?`, [email], (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row ? { forename: row.Forename, surname: row.Surname } : null);
-        }
-      });
-    });
-}
-
 function getProgressID(StudentID) {
   return new Promise((resolve, reject) => {
     db.get(
@@ -731,7 +929,7 @@ async function getAllStudentsLinkedToTeacher(email) {
     });
 }
 
-function getClasscodeIDByTeacherID(teacherID) {
+async function getClasscodeIDByTeacherID(teacherID) {
   return new Promise((resolve, reject) => {
     db.get(
       'SELECT ClasscodeID FROM Classcode WHERE TeacherID = ?',
