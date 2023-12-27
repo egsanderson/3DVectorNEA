@@ -8,6 +8,7 @@ var path = require("path");
 var bodyParser = require('body-parser');
 var helmet = require('helmet');
 var rateLimit = require("express-rate-limit");
+const bcrypt = require('bcrypt');
 
 
 const ejs = require("ejs");
@@ -63,194 +64,128 @@ app.use((req, res, next) => {
   next();
 });
   
-app.post('/add', (req, res) => {
+app.post('/add', async (req, res) => {
   const email = req.body.email;
+  const password = req.body.password;
+  const confirmPassword = req.body.confirmPassword;
+  const accountType = req.body.account_type;
 
   if (!email || email.indexOf('@') === -1) {
     req.session.errorMessage = 'Invalid email format. Please enter a valid email address.';
-    res.render('createAccount', { errorMessage: req.session.errorMessage });
+    console.error(req.session.errorMessage);
+    res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
+    return;
+  }
+  
+  if (password !== confirmPassword) {
+    req.session.errorMessage = 'Passwords do not match. Please enter matching passwords.';
+    console.error(req.session.errorMessage);
+    res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
+    return;
   }
 
-  const accountType = req.body.account_type;
+  try {
+    console.log(password);
+    const hashedPassword = await hashPassword(password);
 
-  if (accountType === "teacher") {
-    const classCode = createClassCode();
+    if (accountType === "teacher") {
+      const classCode = createClassCode();
 
-    db.serialize(() => {
-      db.run(
-        'INSERT INTO Teacher(Forename, Surname, Email, Password) VALUES (?, ?, ?, ?)',
-        [req.body.forename, req.body.surname, req.body.email, req.body.password],
-        function (err) {
-          if (err) {
-            if (err.message.includes('UNIQUE constraint failed')) {
-              req.session.errorMessage = "The email already exists";
-              console.log("The email already exists");
+      db.serialize(() => {
+        db.run(
+          'INSERT INTO Teacher(Forename, Surname, Email, Password) VALUES (?, ?, ?, ?)',
+          [req.body.forename, req.body.surname, email, hashedPassword],
+          function (err) {
+            if (err) {
+              req.session.errorMessage = err.message.includes('UNIQUE constraint failed') ?
+                'The email already exists' : err.message;
+              console.error(req.session.errorMessage);
               res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
             } else {
-              req.session.errorMessage = err.message;
-              console.log(err.message);
-              res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
+              getTeacherID(email)
+                .then((teacherID) => {
+                  db.run('INSERT INTO Classcode(ClasscodeID, TeacherID) VALUES (?, ?)',
+                    [classCode, teacherID],
+                    (err) => {
+                      if (err) {
+                        req.session.errorMessage = err.message.includes('UNIQUE constraint failed') ?
+                          'The email already exists' : err.message;
+                        console.error(req.session.errorMessage);
+                        res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
+                      } else {
+                        console.log(`New ${accountType} has been added`);
+                        req.session.currentUserEmail = email;
+                        res.render('Home', { email, role: "Teacher" });
+                      }
+                    });
+                })
+                .catch((err) => {
+                  req.session.errorMessage = err.message.includes('UNIQUE constraint failed') ?
+                    'The email already exists' : err.message;
+                  console.error(req.session.errorMessage);
+                  res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
+                });
             }
-          } else {
-            getTeacherID(email)
-              .then((teacherID) => {
-                db.run('INSERT INTO Classcode(ClasscodeID, TeacherID) VALUES (?, ?)',
-                  [classCode, teacherID],
-                  (err) => {
-                    if (err) {
-                      req.session.errorMessage = err.message;
-                      console.log(err.message);
-                      res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
-                    } else {
-                      console.log(`New ${req.body.account_type} has been added`);
-                      req.session.currentUserEmail = email;
-                      res.render('Home', { email, role: "Teacher" });
-                    }
-                  });
-              })
-              .catch((err) => {
-                req.session.errorMessage = err.message;
-                console.log(err.message);
-                res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
-              });
           }
-        }
-      );
-    });
-  } else {
-    db.run('INSERT INTO Student(Forename, Surname, Email, Password) VALUES (?, ?, ?, ?)',
-      [req.body.forename, req.body.surname, req.body.email, req.body.password],
-      function (err) {
-        if (err) {
-          if (err.message.includes('UNIQUE constraint failed')) {
-            req.session.errorMessage = "The email already exists";
-            console.log("The email already exists");
-            res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
-          } else {
-            req.session.errorMessage = err.message;
-            console.log(err.message);
-            res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
-          }
-        } else {
-          console.log(`New ${req.body.account_type} has been added`);
-          req.session.currentUserEmail = email;
-          ProgessDatabase(this.lastID);
-          res.render('classroomCodePopup.ejs', { email: req.body.email });
-        }
+        );
       });
+    } else {
+      db.run('INSERT INTO Student(Forename, Surname, Email, Password) VALUES (?, ?, ?, ?)',
+        [req.body.forename, req.body.surname, email, hashedPassword],
+        function (err) {
+          if (err) {
+            req.session.errorMessage = err.message.includes('UNIQUE constraint failed') ?
+              'The email already exists' : err.message;
+            console.error(req.session.errorMessage);
+            res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
+          } else {
+            console.log(`New ${accountType} has been added`);
+            req.session.currentUserEmail = email;
+            ProgessDatabase(this.lastID);
+            res.render('classroomCodePopup.ejs', { email });
+          }
+        });
+    }
+  } catch (err) {
+    console.error(err);
+    req.session.errorMessage = err.message.includes('UNIQUE constraint failed') ?
+      'The email already exists' : err.message;
+    console.error(req.session.errorMessage);
+    res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
   }
 });
 
 
-// app.post('/update', function (req, res) {
-//   if (req.body.password1 != req.body.password2){
-//     console.log("No Match with new passwords")
-//     return res.send("No Match with new passwords")
-//   }
-//   else if (req.body.oldpassword == req.body.password1 || req.body.oldpassword == req.body.password2) {
-//     console.log("Isn't a new password")
-//     return res.send("Isn't a new password")
-//   }
-//   else {
-//     checkPassword(req.body.email, req.body.oldpassword)
-//     .then((result) => {
-//       if (result == "true") {
-//         db.get('UPDATE Accounts SET Password = ? WHERE Email = ?', [req.body.password1, req.body.email], function(err) {
-//           if (err) {
-//             return console.log(err.message);
-//           }
-//           else {
-//             console.log("Updated")
-//             res.send("Updated")
-//           }
-//         });
-//       }
-//       else {
-//         console.log(result)
-//         res.send(result)
-//       }
-//     })
-//     .catch((error) => {
-//       console.log(error.message);
-//     });
-//   }
-
-// });
-
-// app.post('/delete', function(req, res) {
-//   if (req.body.password1 != req.body.password2){
-//     console.log("These passwords dont match");
-//     return res.send("These passwords dont match");
-//   }
-//   else{
-//     checkPassword(req.body.email, req.body.password1)
-//     .then((result) => {
-//       if (result == "true") {
-//         db.get('DELETE FROM Accounts WHERE Email = ?', [req.body.email], function(err) {
-//           if (err) {
-//             return console.log(err.message);
-//           }
-//           else {
-//             console.log("Updated")
-//             res.send("Updated")
-//           }
-//         });
-//       } else {
-//         console.log(result)
-//         res.send(result)
-//       }
-//     })
-//     .catch((error) => {
-//       console.log(error.message)
-//     });
-//   };
-// });
-
-// app.post('/login', function(req, res) {
-//   errorMessage = null
-//   email = req.body.email
-//   password = req.body.password
-//   accounttype = studentOrTeacher(email)
-//   match = checkPassword(email, password)
-//   if (match == true){
-//     if (accounttype == "student"){
-//       res.render('/studentHome', {email});
-//     }
-//     if (accounttype == "teacher"){
-//       res.render('/otherForms', {email})
-//     }
-//   }
-//   else {
-//     res.render('login', {errorMessage : "No Match"})
-
-//   }
-// });
-
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  currentUserEmail = email;
 
-  studentOrTeacher(email)
-    .then((accountType) => checkPassword(email, password, accountType).then((match) => ({ accountType, match })))
-    .then(({ accountType, match }) => {
-      if (match) {
-        req.session.currentUserEmail = email;
-        if (accountType && accountType.toLowerCase() === 'student') {
-          res.render('home', { email, role: "Student" });
-        } else if (accountType && accountType.toLowerCase() === 'teacher') {
-          res.render('home', { email, role: "Teacher" });
-        } else {
-          res.render('login', { errorMessage: 'No Match' });
-        }
+  try {
+    const accountType = await studentOrTeacher(email);
+    const tableName = (accountType === 'Teacher') ? 'Teacher' : 'Student';
+    const user = await getUserByEmail(email, tableName);
+
+    console.log('Stored Hashed Password:', user.Password);
+
+    console.log('Entered Password:', password);
+    const match = await checkPassword(password, user.Password);
+
+    if (match) {
+      req.session.currentUserEmail = email;
+      if (accountType && accountType.toLowerCase() === 'student') {
+        res.render('home', { email, role: "Student" });
+      } else if (accountType && accountType.toLowerCase() === 'teacher') {
+        res.render('home', { email, role: "Teacher" });
       } else {
         res.render('login', { errorMessage: 'No Match' });
       }
-    })
-    .catch((err) => {
-      console.error(err);
-      res.render('login', { errorMessage: 'An error occurred' });
-    });
+    } else {
+      res.render('login', { errorMessage: 'No Match' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.render('login', { errorMessage: 'An error occurred' });
+  }
 });
 
 app.get('/logout', (req, res) => {
@@ -286,10 +221,9 @@ app.get('/draw-page', async (req, res) => {
     req.session.errorMessage = req.session.errorMessage || null;
     res.render('drawVectorGraphic', { errorMessage: req.session.errorMessage, email, role });
   } catch (error) {
-    // Handle errors
     console.error(error);
     req.session.errorMessage = "An error occurred while processing your request.";
-    res.redirect('/draw-page'); // Redirect to handle the error
+    res.redirect('/draw-page');
   }
 });
 
@@ -389,31 +323,58 @@ app.post('/distance-check-answer', function(req, res) {
 })
 
 app.get('/plane-questions', (req, res) => {
-  var vector = new vectorCalculation.Vector()
-  const values = vectorCalculation.PlaneVectorOperations.findPlaneIntersectionWithLine(vector);
-  const {  formattedVector, formattedPlane, coordinates  } = values;
-  const email = req.session.currentUserEmail;
-  const result = null;
+  var val = getRandomBool()
+  console.log(val)
+  if (val == true) {
+    //line and plane
+    var vector = new vectorCalculation.Vector()
+    const values = vectorCalculation.PlaneVectorOperations.findPlaneIntersectionWithLine(vector);
+    const {  formattedVector, formattedPlane, coordinates  } = values;
+    const email = req.session.currentUserEmail;
+    const result = null;
+    res.render("planeQuestion", { email, vector : formattedVector, plane : formattedPlane, coordinates, result, val});
+  }
+  else if (val == false) {
+    //converting equation type
+    const email = req.session.currentUserEmail;
+    const result = null;
+    const values =  vectorCalculation.PlaneVectorOperations.convertFromVectorToCartesian();
+    const {vectorPlane, cartesianPlane } = values;
 
-  res.render("planeQuestion", {email, vector: formattedVector, plane: formattedPlane, coordinates, result})
+    res.render("planeQuestion", {email, plane: vectorPlane, cartesian: cartesianPlane, result, val});
+  }
 });
 
 app.post('/plane-check-answer', function(req, res) {
-  // var val = req.body.val;
   const email = req.session.currentUserEmail;
   const userInput = req.body.userInput;
-  const coordinates = req.body.coordinates;
   const dbName = "Prog_Planes";
-  
-  const result = userInput === coordinates ? 'Correct!' : 'Incorrect!';
-  if (result == 'Correct!'){
-    var check = true;
+  const val = req.body.val;
+  if (val == "true") {
+    const coordinates = req.body.coordinates;
+    const result = userInput === coordinates ? 'Correct!' : 'Incorrect!';
+    if (result == 'Correct!'){
+      var check = true;
+    }
+    else{
+      var check = false;
+    }
+    updateProgTables(dbName, email, check)
+    res.render("planeQuestion", { email, result});
   }
-  else{
-    var check = false;
+  else if (val == "false") {
+    const cartesian = req.body.cartesian;
+    const result = userInput === cartesian ? 'Correct!' : 'Incorrect!';
+    if (result == 'Correct!'){
+      var check = true;
+    }
+    else{
+      var check = false;
+    }
+    updateProgTables(dbName, email, check)
+    res.render("planeQuestion", { email, result});
   }
-  updateProgTables(dbName, email, check)
-  res.render("planeQuestion", { email, result});
+
 })
 
 app.get('/studentProgress', async (req, res) => {
@@ -497,12 +458,31 @@ app.get('/teacherProgress', async (req, res) => {
   }
 });
 
-app.get('/HomePage',(req, res) => {
-    const email = req.session.currentUserEmail;
-    const role = studentOrTeacher(email);
-    console.log(role)
-    res.render('home', { email, role });
+app.get('/HomePage', (req, res) => {
+  const email = req.session.currentUserEmail;
+
+  Promise.resolve(studentOrTeacher(email))
+      .then((role) => {
+          console.log(role);
+          res.render('home', { email, role });
+      })
+      .catch((error) => {
+          console.error(error);
+          res.render('error', { errorMessage: 'An error occurred while processing the request.' });
+      });
 });
+
+const hashPassword = (password) => {
+  return new Promise((resolve, reject) => {
+    bcrypt.hash(password, 10, (err, hash) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(hash);
+      }
+    });
+  });
+};
 
 function ProgessDatabase(StudentID) {
   let ProgressID;
@@ -625,22 +605,23 @@ function setClassCode(classCode, email){
   });
 }
 
-function checkPassword(email, password, tableName) {
-  return new Promise((resolve, reject) => {
-    if (!tableName) {
-      resolve(false);
-    } else {
-      db.get(`SELECT Password FROM ${tableName} WHERE Email = ?`, [email], (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          if (row && password === row.Password) {
-            resolve(true);
-          } else {
-            resolve(false);
-          }
-        }
-      });
+function checkPassword(enteredPassword, storedPassword) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const match = await bcrypt.compare(enteredPassword, storedPassword);
+
+      console.log('bcrypt.compare Result:', match);
+
+      if (!match) {
+        console.log('Password comparison failed. Detailed comparison:');
+        console.log('Entered Password (hashed):', await bcrypt.hash(enteredPassword, 10));
+        console.log('Stored Password (hashed):', storedPassword);
+      }
+
+      resolve(match);
+    } catch (err) {
+      console.error('Error in checkPassword:', err);
+      reject(err);
     }
   });
 }
@@ -782,17 +763,29 @@ function getStudentsByClasscodeID(classcodeID) {
   });
 }
 
+function getUserByEmail(email, tableName) {
+  return new Promise((resolve, reject) => {
+    const query = `SELECT * FROM ${tableName} WHERE Email = ?`;
+
+    db.get(query, [email], (err, row) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(row);
+      }
+    });
+  });
+}
+
 async function getStudentsProgressData(studentIDs, students) {
   try {
     const progressData = [];
     const tables = ["Progress","Prog_Intersection", "Prog_Distance", "Prog_Planes"];
 
     for (const studentID of studentIDs) {
-      // Find the student information in the array
       const studentInfo = students.find(student => student.StudentID === studentID);
       
       if (!studentInfo) {
-        // Handle the case where student information is not found
         console.error(`Student information not found for ID: ${studentID}`);
         continue;
       }
@@ -829,6 +822,7 @@ async function getStudentsProgressData(studentIDs, students) {
     throw error;
   }
 }
+
 async function getTableProgressData(table, progressID) {
   return new Promise((resolve, reject) => {
     db.get(
@@ -862,3 +856,88 @@ server.listen(3000,function(){
     console.log("Server listening on port: 3000");
     console.log("Server is running on 'http://localhost:3000/'");
 });
+
+
+// app.post('/update', function (req, res) {
+//   if (req.body.password1 != req.body.password2){
+//     console.log("No Match with new passwords")
+//     return res.send("No Match with new passwords")
+//   }
+//   else if (req.body.oldpassword == req.body.password1 || req.body.oldpassword == req.body.password2) {
+//     console.log("Isn't a new password")
+//     return res.send("Isn't a new password")
+//   }
+//   else {
+//     checkPassword(req.body.email, req.body.oldpassword)
+//     .then((result) => {
+//       if (result == "true") {
+//         db.get('UPDATE Accounts SET Password = ? WHERE Email = ?', [req.body.password1, req.body.email], function(err) {
+//           if (err) {
+//             return console.log(err.message);
+//           }
+//           else {
+//             console.log("Updated")
+//             res.send("Updated")
+//           }
+//         });
+//       }
+//       else {
+//         console.log(result)
+//         res.send(result)
+//       }
+//     })
+//     .catch((error) => {
+//       console.log(error.message);
+//     });
+//   }
+
+// });
+
+// app.post('/delete', function(req, res) {
+//   if (req.body.password1 != req.body.password2){
+//     console.log("These passwords dont match");
+//     return res.send("These passwords dont match");
+//   }
+//   else{
+//     checkPassword(req.body.email, req.body.password1)
+//     .then((result) => {
+//       if (result == "true") {
+//         db.get('DELETE FROM Accounts WHERE Email = ?', [req.body.email], function(err) {
+//           if (err) {
+//             return console.log(err.message);
+//           }
+//           else {
+//             console.log("Updated")
+//             res.send("Updated")
+//           }
+//         });
+//       } else {
+//         console.log(result)
+//         res.send(result)
+//       }
+//     })
+//     .catch((error) => {
+//       console.log(error.message)
+//     });
+//   };
+// });
+
+// app.post('/login', function(req, res) {
+//   errorMessage = null
+//   email = req.body.email
+//   password = req.body.password
+//   accounttype = studentOrTeacher(email)
+//   match = checkPassword(email, password)
+//   if (match == true){
+//     if (accounttype == "student"){
+//       res.render('/studentHome', {email});
+//     }
+//     if (accounttype == "teacher"){
+//       res.render('/otherForms', {email})
+//     }
+//   }
+//   else {
+//     res.render('login', {errorMessage : "No Match"})
+
+//   }
+// });

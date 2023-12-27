@@ -466,6 +466,44 @@ class PlaneVectorOperations extends VectorOperations {
             return this.findPlaneIntersectionWithLine(newVector);
         }
     }
+
+    static convertFromVectorToCartesian(plane) {
+        var plane = new Planes();        
+        const crossProduct = [
+            `(${plane.direction1.b} * ${plane.direction2.f}) - (${plane.direction1.c} * ${plane.direction2.e})`,
+            `(${plane.direction1.c} * ${plane.direction2.d}) - (${plane.direction1.a} * ${plane.direction2.f})`,
+            `(${plane.direction1.a} * ${plane.direction2.e}) - (${plane.direction1.b} * ${plane.direction2.d})`
+        ];
+        
+        const numericValues = crossProduct.map(expression => nerdamer(expression).evaluate().toString());
+        const [xCoefficient, yCoefficient, zCoefficient] = numericValues;
+       
+        const dotProduct = `(${plane.position.x} * ${xCoefficient}) + (${plane.position.y} * ${yCoefficient}) + (${plane.position.z} * ${zCoefficient})`;
+        const dotProductValue = nerdamer(dotProduct).evaluate().toString();
+        
+        console.log('Dot Product:', dotProductValue);
+
+        const equationTerms = [
+            xCoefficient !== '0' ? `${xCoefficient > 0 ? '' : '-'}${Math.abs(xCoefficient) === 1 ? '' : Math.abs(xCoefficient)}x` : '',
+            yCoefficient !== '0' ? `${yCoefficient > 0 ? '+ ' : '-'}${Math.abs(yCoefficient) === 1 ? '' : Math.abs(yCoefficient)}y` : '',
+            zCoefficient !== '0' ? `${zCoefficient > 0 ? '+ ' : '-'}${Math.abs(zCoefficient) === 1 ? '' : Math.abs(zCoefficient)}z` : ''
+        ].filter(term => term !== '');
+
+        if (equationTerms.length > 0 && equationTerms[0][0] !== '-') {
+            equationTerms[0] = `-${equationTerms[0]}`;
+        }
+
+        const formattedCartesianEquation = equationTerms.join(' ') + ` = ${dotProductValue}`;
+        console.log('Formatted Equation:', formattedCartesianEquation);    
+        const formattedPlane = plane.formatPlane("q", "r", "r: ");
+
+        return {
+            vectorPlane : formattedPlane,
+            cartesianPlane : formattedCartesianEquation
+        }
+    }
+    
+
 }
 
 

@@ -23,7 +23,7 @@
                     <a href="#" id="profileButton">Profile - [/- email /]</a>
                     <div class="dropdown-content">
                         <a href="#" id="StudentprofileButton">View Profile</a>
-                        <a href="#" id="studentHomePage">Logout</a>
+                        <a href="#" id="logoutButton">Logout</a>
                     </div>
                 </li>
             </ul>
@@ -33,8 +33,9 @@
             <p>[/- result /]</p>
             <p>Would you like to answer another question?</p>
             <a href="/distance-questions" id="repeatButton-Yes">Yes</a>
-            <a href="/studentHomePage" id="repeatButton-No">No</a>
+            <a href="/HomePage" id="repeatButton-No">No</a>
         [/ } else if (val == true) { /]
+            <h3>Distance between two skew lines</h3>
             <p>[/- vector1 /]</p>
             <p>[/- vector2 /]</p>
             <p>[/- distance /]</p>
@@ -51,6 +52,7 @@
                 <button type="submit">Check Answer</button>
             </form>
         [/ } else if (val == false) { /]
+            <h3>Distance between a point and a line</h3>
             <p>[/- vector /]</p>
             <p>[/- point /]</p>
             <p>[/- distance /]</p>
