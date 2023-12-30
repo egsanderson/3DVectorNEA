@@ -20,8 +20,8 @@
 
         #threejs-canvas {
             flex: 1;
-            width: 70%;
-            height: 70%;
+            width: 100%;
+            height: 100%;
             border-top: 1px solid #333;
         }
 
@@ -32,78 +32,257 @@
         #input-container {
             padding: 10px;
         }
-    </style></head>
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+    </style>
+</head>
 <body>
-  [/ if (role == "Student") { /]
-    <nav id="studentNav">
-      <ul>
-          <li class="dropdown">
-              <a href="#" id="questionsButton">Questions</a>
-              <div class="dropdown-content">
-                  <a href="#" id="intersectionButton">Intersection</a>
-                  <a href="#" id="distanceButton">Distance</a>
-                  <a href="#" id="planesButton">Planes</a>
-              </div>
-          </li>
-          <li><a href="#" id="StudentprogressButton">Progress</a></li>
-          <li><a href="#" id="drawButton">Draw Vector</a></li>
-          <li class="dropdown">
-              <a href="#" id="profileButton">Profile - [/- email /]</a>
-              <div class="dropdown-content">
-                  <a href="#" id="StudentprofileButton">View Profile</a>
-                  <a href="#" id="logoutButton">Logout</a>
-              </div>
-          </li>
-        </ul>
-  </nav>
-  [/ } else { /]
-    <nav id="teacherNav">
-        <ul>
-            <li><a href="#" id="ClassprogressButton">Class Progress</a></li>
-            <li><a href="#" id="drawButton">Draw Vector</a></li>
-            <li class="dropdown">
-                <a href="#" id="profileButton">Profile - [/- email /]</a>
-                <div class="dropdown-content">
-                    <a href="#" id="Teacherprofilebutton">View Profile</a>
-                    <a href="#" id="ViewStudents">View Students</a>
-                    <a href="#" id="ChangeYourPassword">Change Your Password</a>
-                    <a href="#" id="ChangeStudentPassword">Change Student Password</a>
-                    <a href="#" id="DeleteStudent">Delete A Student</a>
-                    <a href="#" id="AddStudent">Add A Student</a>
-                    <a href="#" id="logoutButton">Logout</a>
-                </div>
-            </li>
-        </ul>
-    </nav>
-  [/ } /]
-
-
-    <div id="input-container">
-        <label>Vector Equation (Line 1):</label>
-        <div class="vector-input">
-            <label>(x: ), (y: ), (z: ) + (a: ), (b: ), (c: )</label>
-            <br>
-            <label>X:</label>
-            <input type="number" id="xline" value="0">
-            <label>Y:</label>
-            <input type="number" id="yline" value="0">
-            <label>Z:</label>
-            <input type="number" id="zline" value="0">
-            <label>a:</label>
-            <input type="number" id="aline" value="1">
-            <label>b:</label>
-            <input type="number" id="bline" value="0">
-            <label>c:</label>
-            <input type="number" id="cline" value="0">
+    [/ if (role == "Student") { /]
+        <nav id="studentNav">
+            <ul>
+                <li class="dropdown">
+                    <a href="#" id="questionsButton">Questions</a>
+                    <div class="dropdown-content">
+                        <a href="#" id="intersectionButton">Intersection</a>
+                        <a href="#" id="distanceButton">Distance</a>
+                        <a href="#" id="planesButton">Planes</a>
+                    </div>
+                </li>
+                <li><a href="#" id="StudentprogressButton">Progress</a></li>
+                <li><a href="#" id="drawButton">Draw Vector</a></li>
+                <li class="dropdown">
+                    <a href="#" id="profileButton">Profile - [/- email /]</a>
+                    <div class="dropdown-content">
+                        <a href="#" id="StudentprofileButton">View Profile</a>
+                        <a href="#" id="logoutButton">Logout</a>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+    [/ } else { /]
+        <nav id="teacherNav">
+            <ul>
+                <li><a href="#" id="ClassprogressButton">Class Progress</a></li>
+                <li><a href="#" id="drawButton">Draw Vector</a></li>
+                <li class="dropdown">
+                    <a href="#" id="profileButton">Profile - [/- email /]</a>
+                    <div class="dropdown-content">
+                        <a href="#" id="Teacherprofilebutton">View Profile</a>
+                        <a href="#" id="ViewStudents">View Students</a>
+                        <a href="#" id="ChangeYourPassword">Change Your Password</a>
+                        <a href="#" id="ChangeStudentPassword">Change Student Password</a>
+                        <a href="#" id="DeleteStudent">Delete A Student</a>
+                        <a href="#" id="AddStudent">Add A Student</a>
+                        <a href="#" id="logoutButton">Logout</a>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+    [/ } /]
+    <br>
+    <button onclick="showAddLineModal()">Add Line</button>
+    <br>
+    <div id="addLineModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddLineModal()">&times;</span>
+            <h2>Add Line</h2>
+            <form id="addLineForm">
+                <label for="xValue">X:</label>
+                <input type="number" id="xValue" placeholder="--" required>
+                <label for="yValue">Y:</label>
+                <input type="number" id="yValue" placeholder="--" required>
+                <label for="zValue">Z:</label>
+                <input type="number" id="zValue" placeholder="--" required>
+                <label for="aValue">a:</label>
+                <input type="number" id="aValue" placeholder="--" required>
+                <label for="bValue">b:</label>
+                <input type="number" id="bValue" placeholder="--" required>
+                <label for="cValue">c:</label>
+                <input type="number" id="cValue" placeholder="--" required>
+                <button type="button" onclick="addLine()">Add Line</button>
+            </form>
         </div>
     </div>
-
+    <br>
+    <button onclick="showAddPlaneModal()">Add Plane</button>
+    <div id="addPlaneModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddPlaneModal()">&times;</span>
+            <h2>Add Plane</h2>
+            <form id="addPlaneForm">
+                <label for="nxValue">X:</label>
+                <input type="number" id="nxValue" placeholder="--" required>
+                <label for="nyValue">Y:</label>
+                <input type="number" id="nyValue" placeholder="--" required>
+                <label for="nzValue">Z:</label>
+                <input type="number" id="nzValue" placeholder="--" required>
+                <label for="pValue">p:</label>
+                <input type="number" id="pValue" placeholder="--" required>
+                <button type="button" onclick="addPlane()">Add Plane</button>
+            </form>
+        </div>
+    </div>
+    <br><br>
+    <div id="camera-controls">
+        <label>X:</label>
+        <button onclick="changeCameraPosition('x', '+')">+</button>
+        <button onclick="changeCameraPosition('x', '-')">-</button>
+    
+        <label>Y:</label>
+        <button onclick="changeCameraPosition('y', '+')">+</button>
+        <button onclick="changeCameraPosition('y', '-')">-</button>
+    
+        <label>Z:</label>
+        <button onclick="changeCameraPosition('z', '+')">+</button>
+        <button onclick="changeCameraPosition('z', '-')">-</button>
+    </div>
+    <button onclick="recenterCamera()">Re-center</button>
+    <br>
     <div id="container">
         <div id="threejs-canvas"></div>
     </div>
 
     <script src="../public/js/three.js"></script>
-    <script src="../public/js/graphics.js"></script>
+    <script>
+        class ThreeJSApp {
+            constructor() {
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.renderer = new THREE.WebGLRenderer({ alpha: true });
+                this.renderer.setSize(window.innerWidth * 0.7, window.innerHeight * 0.7);
+                document.getElementById('threejs-canvas').appendChild(this.renderer.domElement);
+                this.camera.position.z = 5;
+            }
     
+            createLine(x1, y1, z1, x2, y2, z2, color) {
+                const material = new THREE.LineBasicMaterial({ color, linewidth: 2 });
+                const points = [new THREE.Vector3(x1, y1, z1), new THREE.Vector3(x2, y2, z2)];
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const line = new THREE.Line(geometry, material);
+                this.scene.add(line);
+                this.renderer.render(this.scene, this.camera);
+            }
+            createPlane(nx, ny, nz, p) {
+            const normal = new THREE.Vector3(nx, ny, nz).normalize();
+            const constant = p / normal.length();
+
+            const planeGeometry = new THREE.PlaneGeometry(200, 200, 1, 1);
+            const planeMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide });
+            const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+
+            // planeMesh.rotation.x = -Math.PI / 2; // Rotate the plane to align with the ground
+
+            planeMesh.position.copy(normal.clone().multiplyScalar(constant));
+
+            this.scene.add(planeMesh);
+            this.renderer.render(this.scene, this.camera);
+            }
+    
+            createAxes() {
+                const axesHelper = new THREE.AxesHelper(5);
+                this.scene.add(axesHelper);
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+    
+        function showAddLineModal() {
+            document.getElementById('addLineModal').style.display = 'block';
+        }
+    
+        function closeAddLineModal() {
+            document.getElementById('addLineModal').style.display = 'none';
+        }
+    
+        function addLine() {
+            const x = parseFloat(document.getElementById('xValue').value) || 0;
+            const y = parseFloat(document.getElementById('yValue').value) || 0;
+            const z = parseFloat(document.getElementById('zValue').value) || 0;
+            const a = parseFloat(document.getElementById('aValue').value) || 1;
+            const b = parseFloat(document.getElementById('bValue').value) || 0;
+            const c = parseFloat(document.getElementById('cValue').value) || 0;
+    
+            const maxX = Math.min(100, x + 100 * a);
+            const maxY = Math.min(100, y + 100 * b);
+            const maxZ = Math.min(100, z + 100 * c);
+            const minX = Math.max(-100, x - 100 * a);
+            const minY = Math.max(-100, y - 100 * b);
+            const minZ = Math.max(-100, z - 100 * c);
+    
+            app.createLine(minX, minY, minZ, maxX, maxY, maxZ, 0xff0000);
+            closeAddLineModal();
+        }
+        function showAddPlaneModal() {
+            document.getElementById('addPlaneModal').style.display = 'block';
+        }
+
+        function closeAddPlaneModal() {
+            document.getElementById('addPlaneModal').style.display = 'none';
+        }
+
+        function addPlane() {
+            const nx = parseFloat(document.getElementById('nxValue').value) || 0;
+            const ny = parseFloat(document.getElementById('nyValue').value) || 0;
+            const nz = parseFloat(document.getElementById('nzValue').value) || 0;
+            const p = parseFloat(document.getElementById('pValue').value) || 0;
+
+            app.createPlane(nx, ny, nz, p);
+            closeAddPlaneModal();
+        }
+    
+        function initThreeJSApp() {
+            const app = new ThreeJSApp();
+            window.app = app;
+    
+            app.camera.position.set(5, 5, 5);
+            app.camera.lookAt(0, 0, 0);
+    
+            app.createAxes();
+        }
+        function changeCameraPosition(axis, direction) {
+            const step = 1; // You can adjust the step value as needed
+            switch (axis) {
+                case 'x':
+                    app.camera.position.x += (direction === '+') ? step : -step;
+                    break;
+                case 'y':
+                    app.camera.position.y += (direction === '+') ? step : -step;
+                    break;
+                case 'z':
+                    app.camera.position.z += (direction === '+') ? step : -step;
+                    break;
+            }
+            app.camera.updateProjectionMatrix();
+            app.renderer.render(app.scene, app.camera);
+        }
+        function recenterCamera() {
+            app.camera.position.set(5, 5, 5);
+            app.camera.lookAt(0, 0, 0);
+            app.renderer.render(app.scene, app.camera);
+        }
+
+    
+        document.addEventListener('DOMContentLoaded', initThreeJSApp);
+    </script>
 </body>
 </html>
