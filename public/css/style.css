@@ -211,3 +211,92 @@ nav#teacherNav{
     text-align: center; /* Center the radio button labels */
 }
 
+#changePassword-form,
+#changeMyStudentPassword-form,
+#changeStudentPassword-form,
+#deleteStudentEmail-form,
+#confirmDeleteStudent-form,
+#addStudentForm {
+    max-width: 450px;
+    margin: 50px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+
+#changePassword-form h3,
+#changeMyStudentPassword-form h3, 
+#changeStudentPassword-form h3,
+#deleteStudentEmail-form h3,
+#confirmDeleteStudent-form h3,
+#addStudentForm h3 {
+    text-align: center;
+    color: #333;
+}
+
+#changePassword-form label,
+#changeStudentPassword-form label,
+#changeMyStudentPassword-form label,
+#deleteStudentEmail-form label,
+#confirmDeleteStudent-form label,
+#addStudentForm label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+}
+
+#changePassword-form input,
+#changeStudentPassword-form input,
+#deleteStudentEmail-form input,
+#changeMyStudentPassword-form input,
+#confirmDeleteStudent-form input,
+#addStudentForm input {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#changePassword-form button,
+#changeStudentPassword-form button,
+#deleteStudentEmail-form button,
+#changeMyStudentPassword-form button,
+#confirmDeleteStudent-form button,
+#addStudentForm button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #04AA6D;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#changePassword-form button[type="reset"],
+#changeStudentPassword-form button[type="reset"],
+#deleteStudentEmail-form button[type="reset"],
+#confirmDeleteStudent-form button[type="reset"],
+#changeMyStudentPassword-form button[type="reset"],
+#addStudentForm button[type="reset"] {
+    background-color: #ccc;
+    margin-right: 10px;
+}
+
+#changePassword-form button:hover,
+#changeStudentPassword-form button:hover,
+#deleteStudentEmail-form button:hover,
+#changeMyStudentPassword-form button:hover,
+#confirmDeleteStudent-form button:hover,
+#addStudentForm button:hover {
+    opacity: 0.9;
+}
+body {
+    text-align: center;
+}
+
+h1, h2, h3 {
+    text-align: center;
+}

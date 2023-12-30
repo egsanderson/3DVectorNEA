@@ -32,7 +32,24 @@
         <h1>Student Profile</h1>
         <h2>Hi, [/- forename /] [/- surname /]</h2>
 
-        <p>Get options to change password for an account</p>
-        
+        <form id="changeMyStudentPassword-form" action="/changeMyStudentPassword" method="POST">
+            <fieldset>
+                <h3>Change Student Password</h3>
+                [/ if (resultString) { /]
+                    <p style="color: red;">[/- resultString /]</p>
+                [/ } /]
+                <label>Email</label>
+                <input type="text" id="email" name="email" required>
+                <br><br>
+                <label>New Password</label>
+                <input type="password" id="newPassword" name="newPassword" required>
+                <br><br>
+                <label>Confirm New Password</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required>
+                <br><br>
+                <button type="reset">Reset</button>
+                <button type="submit">Submit</button>
+            </fieldset>
+        </form>        
     </body>
 </html>

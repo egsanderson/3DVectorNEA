@@ -162,7 +162,6 @@ app.post('/add', async (req, res) => {
   }
 });
 
-
 app.post('/login', async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -259,7 +258,8 @@ app.get('/studentProfile-page', function(req,res) {
   //const table = "Student";
   const forename = req.session.forename;
   const surname = req.session.surname;
-  res.render("studentProfile", {email, forename, surname})
+  const resultString = null
+  res.render("studentProfile", {email, forename, surname, resultString})
 
 });
 
@@ -282,8 +282,9 @@ app.get('/teacherProfile-page', async function(req, res) {
 app.get('/intersection-questions', (req, res) => {
   const { vector1, vector2, coordinates } = vectorCalculation.IntersectionVectorOperations.getIntersectingVectorsAndCoordinates();
   const result = null;
+  const hint = null;
   const email = req.session.currentUserEmail;
-  res.render("intersectionQuestion", { email, vector1, vector2, coordinates, result });
+  res.render("intersectionQuestion", { email, vector1, vector2, coordinates, result, hint });
 });
 
 app.post("/intersection-check-answer", function(req, res) {
@@ -463,7 +464,6 @@ app.get('/studentProgress', async (req, res) => {
 
   getAllProgressData();
 });
-
 
 app.get('/teacherProgress', async (req, res) => {
   const email = req.session.currentUserEmail;
@@ -650,6 +650,151 @@ app.post('/confirmDeleteStudent', async (req, res) => {
   }
 });
 
+app.get('/addStudent', (req, res) => {
+  console.log("Add student")
+  const val = "addStudent";
+  const email = req.session.currentUserEmail;
+  const forename = req.session.forename;
+  const surname = req.session.surname;
+  res.render("teacherProfile", { email, forename, surname, val, resultString : null });
+});
+
+app.post('/addStudentForm', async (req, res) => {
+  const CurrentUserEmail = req.session.currentUserEmail;
+  const forename = req.session.forename;
+  const surname = req.session.surname;
+  const classcode = req.session.classcode;
+  const email = req.body.email;
+  const password = req.body.password;
+  const confirmPassword = req.body.confirmPassword;
+  const accountType = "student"; 
+
+
+  if (!email || email.indexOf('@') === -1) {
+    const resultString = 'Invalid email format. Please enter a valid email address.';
+    res.render("teacherProfile", { email : CurrentUserEmail, forename, surname, val : "addStudent", resultString });
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    const resultString = 'Passwords do not match. Please enter matching passwords.';
+    res.render("teacherProfile", { email : CurrentUserEmail, forename, surname, val : "addStudent", resultString });
+    return;
+  }
+
+  try {
+    console.log(password);
+    const hashedPassword = await hashPassword(password);
+
+    db.run(
+      'INSERT INTO Student(Forename, Surname, Email, Password, ClasscodeID) VALUES (?, ?, ?, ?, ?)',
+      [req.body.forename, req.body.surname, email, hashedPassword, classcode],
+      function (err) {
+        if (err) {
+          const resultString = err.message.includes('UNIQUE constraint failed') ?
+            'The email already exists' : err.message;
+            res.render("teacherProfile", { email : CurrentUserEmail, forename, surname, val : "addStudent", resultString });
+          } else {
+          console.log(`New ${accountType} has been added`);
+          const resultString = `New ${accountType} has been added`
+          ProgessDatabase(this.lastID);
+          res.render("teacherProfile", { email : CurrentUserEmail, forename, surname, val : "addStudent", resultString });
+        }
+      }
+    );
+  } catch (err) {
+    console.error(err);
+    const resultString =err.message.includes('UNIQUE constraint failed') ?
+      'The email already exists' : err.message;
+      res.render("teacherProfile", { email : CurrentUserEmail, forename, surname, val : "addStudent", resultString });
+    }
+});
+
+app.post('/changeStudentPassword', async (req, res) => {
+  const email = req.body.email;
+  const currentUserEmail = req.session.currentUserEmail
+  const newStudentPassword = req.body.newPassword;
+  const confirmNewStudentPassword = req.body.confirmPassword;
+  const val = "changeStudentPassword";
+  var resultString;
+
+  try {
+    const studentClasscodeID = await getClasscodeIDByEmail(email);
+
+    if (studentClasscodeID !== req.session.classcode) {
+      resultString = 'You do not have permission to change this students password.';
+      res.render("teacherProfile", { email : currentUserEmail, forename: req.session.forename, surname: req.session.surname, val, resultString });
+      return;
+    }
+
+    const user = await getUserByEmail(email, 'Student');
+
+    console.log('Stored Hashed Password:', user.Password);
+
+    if (newStudentPassword !== confirmNewStudentPassword) {
+      resultString = 'New password and confirm new password do not match';
+      res.render("teacherProfile", { email : currentUserEmail, forename: req.session.forename, surname: req.session.surname, val, resultString });
+      return;
+    }
+
+    const hashedNewPassword = await hashPassword(newStudentPassword);
+    db.get(`UPDATE Student SET Password = ? WHERE Email = ?`, [hashedNewPassword, email], function (err) {
+      if (err) {
+        resultString = err.message;
+        res.render("teacherProfile", { email : currentUserEmail, forename: req.session.forename, surname: req.session.surname, val, resultString });
+      } else {
+        console.log('Password has been successfully changed');
+        res.render("teacherProfile", { email : currentUserEmail, forename: req.session.forename, surname: req.session.surname, val, resultString: "Sucessful!" });
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    resultString = 'An error occurred while changing the password';
+    console.error(resultString);
+    res.render("teacherProfile", { email : currentUserEmail, forename: req.session.forename, surname: req.session.surname, val, resultString });
+  }
+});
+
+app.get('/changeStudentPassword-page', (req, res) => {
+  const val = "changeStudentPassword";
+  const email = req.session.currentUserEmail;
+  const forename = req.session.forename;
+  const surname = req.session.surname;
+  res.render("teacherProfile", { email, forename, surname, val, resultString : null });
+});
+
+app.post('/changeMyStudentPassword', async (req, res) => {
+  const email = req.body.email;
+  const forename = req.session.forename;
+  const surname = req.session.surname;
+  const newStudentPassword = req.body.newPassword;
+  const confirmNewStudentPassword = req.body.confirmPassword;
+  let resultString;
+
+  try {
+    if (newStudentPassword !== confirmNewStudentPassword) {
+      resultString = 'New password and confirm new password do not match';
+      res.render("studentProfile", { email, forename, surname, resultString });
+      return;
+    }
+    const hashedNewPassword = await hashPassword(newStudentPassword);
+    db.run(`UPDATE Student SET Password = ? WHERE Email = ?`, [hashedNewPassword, email], function(err) {
+      if (err) {
+        console.error(err);
+        resultString = 'An error occurred while changing the password';
+        res.render("studentProfile", { email, forename, surname, resultString });
+      } else {
+        resultString = 'Password has been successfully changed';
+        res.render("studentProfile", { email, forename, surname, resultString });
+      }
+    });
+
+  } catch (err) {
+    console.error(err);
+    resultString = 'An error occurred while changing the password';
+    res.render("studentProfile", { email, forename, surname, resultString });
+  }
+});
 
 const hashPassword = (password) => {
   return new Promise((resolve, reject) => {
@@ -934,6 +1079,22 @@ async function getClasscodeIDByTeacherID(teacherID) {
     db.get(
       'SELECT ClasscodeID FROM Classcode WHERE TeacherID = ?',
       [teacherID],
+      (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(row ? row.ClasscodeID : null);
+        }
+      }
+    );
+  });
+}
+
+async function getClasscodeIDByEmail(studentEmail) {
+  return new Promise((resolve, reject) => {
+    db.get(
+      'SELECT ClasscodeID FROM Student WHERE Email = ?',
+      [studentEmail],
       (err, row) => {
         if (err) {
           reject(err);

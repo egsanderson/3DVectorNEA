@@ -17,7 +17,9 @@
                         <a href="#" id="Teacherprofilebutton">View Profile</a>
                         <a href="#" id="ViewStudents">View Students</a>
                         <a href="#" id="ChangeYourPassword">Change Your Password</a>
+                        <a href="#" id="ChangeStudentPassword">Change Student Password</a>
                         <a href="#" id="DeleteStudent">Delete A Student</a>
+                        <a href="#" id="AddStudent">Add A Student</a>
                         <a href="#" id="logoutButton">Logout</a>
                     </div>
                 </li>
@@ -45,6 +47,26 @@
                     <br><br>
                     <label>Current Password</label>
                     <input type="password" id="password" name="password" required>
+                    <br><br>
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" name="newPassword" required>
+                    <br><br>
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    <br><br>
+                    <button type="reset">Reset</button>
+                    <button type="submit">Submit</button>
+                </fieldset>
+            </form>
+        [/ } else if (val == "changeStudentPassword") { /]
+            <form id="changeStudentPassword-form" action="/changeStudentPassword" method="POST">
+                <fieldset>
+                    <h3>Change Student Password</h3>
+                    [/ if (resultString) { /]
+                        <p style="color: red;">[/- resultString /]</p>
+                    [/ } /]
+                    <label>Email</label>
+                    <input type="text" id="email" name="email" required>
                     <br><br>
                     <label>New Password</label>
                     <input type="password" id="newPassword" name="newPassword" required>
@@ -89,12 +111,33 @@
                     <button type="submit">Submit</button>
                 </fieldset>
             </form>
+        [/ } else if (val == "addStudent") { /]
+            <form id="addStudentForm" action="/addStudentForm" method="POST">
+                <fieldset>
+                  <h3>Create a student account</h3> 
+                  [/ if (resultString) { /]
+                    <p style="color: red;">[/- resultString /]</p>
+                  [/ } /]
+                  <label>First Name</label>
+                  <input type="text" id="forename" name="forename" required>
+                  <br><br>
+                  <label>Surname</label>
+                  <input type="text" id="surname" name="surname" required>
+                  <br><br>
+                  <label>Email</label>
+                  <input type="text" id="email" name="email" required>
+                  <br><br>
+                  <label>Password</label>
+                  <input type="password" id="password" name="password" required>
+                  <br><br>
+                  <label>Confirm Password</label>
+                  <input type="password" id="confirmPassword" name="confirmPassword" required>
+                  <br><br>
+                  <button type="reset">Reset</button>
+                  <button type="submit">Submit</button>
+                </fieldset>
+              </form>
         [/ } /]
-
-        <!-- <button onclick="navigateToRoute('/changePasswordRedirect')">Change Your Password</button>
-        <button onclick="navigateToRoute('/changeStudentPassword')">Change Student Password</button>
-        <button onclick="navigateToRoute('/deleteStudent')">Delete Student</button>
-        <button onclick="navigateToRoute('/addStudent')">Add Student</button> -->
 
     </body>
 </html>

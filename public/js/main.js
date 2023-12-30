@@ -3,16 +3,19 @@ document.addEventListener("DOMContentLoaded", function () {
   const createAccountButton = document.getElementById("createAccountButton");
   const drawButton = document.getElementById("drawButton");
   const StudentprogressButton = document.getElementById("StudentprogressButton");
-  //const questionButton = document.getElementById("questionsButton");
   const StudentprofileButton = document.getElementById("StudentprofileButton");
   const Teacherprofilebutton = document.getElementById("Teacherprofilebutton");
   const ViewStudents = document.getElementById("ViewStudents");
   const ChangeYourPassword = document.getElementById("ChangeYourPassword");
   const DeleteStudent = document.getElementById("DeleteStudent");
   const ClassprogressButton = document.getElementById("ClassprogressButton");
+  const AddStudent = document.getElementById("AddStudent");
   const intersectionButton = document.getElementById("intersectionButton");
   const distanceButton = document.getElementById("distanceButton");
   const planesButton = document.getElementById("planesButton")
+  const ChangeStudentPassword = document.getElementById("ChangeStudentPassword");
+
+  
   
   const logoutButton = document.getElementById('logoutButton')
   if (loginButton) {
@@ -85,4 +88,15 @@ document.addEventListener("DOMContentLoaded", function () {
       window.location.href = "/deleteStudent";
     });
   }
+  if (AddStudent) {
+    AddStudent.addEventListener('click', function() {
+      window.location.href = "/addStudent";
+    });
+  }
+  if (ChangeStudentPassword) {
+    ChangeStudentPassword.addEventListener('click', function() {
+      window.location.href = "/changeStudentPassword-page";
+    });
+  }
 });
+
