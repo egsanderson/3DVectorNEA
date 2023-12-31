@@ -107,6 +107,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeAddLineModal()">&times;</span>
             <h2>Add Line</h2>
+            <h3>The form is done by r = (x,y,z) + p(a,b,c)</h3>
             <form id="addLineForm">
                 <label for="xValue">X:</label>
                 <input type="number" id="xValue" placeholder="--" required>
@@ -143,6 +144,22 @@
             </form>
         </div>
     </div>
+    <button onclick="showAddPointModal()">Add Point</button> 
+    <div id="addPointModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddPointModal()">&times;</span>
+            <h2>Add Point</h2>
+            <form id="addPointForm">
+                <label for="xPoint">X:</label>
+                <input type="number" id="xPoint" placeholder="--" required>
+                <label for="yPoint">Y:</label>
+                <input type="number" id="yPoint" placeholder="--" required>
+                <label for="zPoint">Z:</label>
+                <input type="number" id="zPoint" placeholder="--" required>
+                <button type="button" onclick="addPoint()">Add Point</button>
+            </form>
+        </div>
+    </div>
     <br><br>
     <div id="camera-controls">
         <label>X:</label>
@@ -157,6 +174,9 @@
         <button onclick="changeCameraPosition('z', '+')">+</button>
         <button onclick="changeCameraPosition('z', '-')">-</button>
     </div>
+    <br>
+    <div id="camera-coordinates"></div>
+    <br>
     <button onclick="recenterCamera()">Re-center</button>
     <br>
     <div id="container">
@@ -191,8 +211,6 @@
             const planeMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide });
             const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
 
-            // planeMesh.rotation.x = -Math.PI / 2; // Rotate the plane to align with the ground
-
             planeMesh.position.copy(normal.clone().multiplyScalar(constant));
 
             this.scene.add(planeMesh);
@@ -213,7 +231,14 @@
         function closeAddLineModal() {
             document.getElementById('addLineModal').style.display = 'none';
         }
-    
+        function showAddPointModal() {
+            document.getElementById('addPointModal').style.display = 'block';
+        }
+
+        function closeAddPointModal() {
+            document.getElementById('addPointModal').style.display = 'none';
+        }
+
         function addLine() {
             const x = parseFloat(document.getElementById('xValue').value) || 0;
             const y = parseFloat(document.getElementById('yValue').value) || 0;
@@ -259,8 +284,30 @@
     
             app.createAxes();
         }
+        function addPoint() {
+            const x = parseFloat(document.getElementById('xPoint').value) || 0;
+            const y = parseFloat(document.getElementById('yPoint').value) || 0;
+            const z = parseFloat(document.getElementById('zPoint').value) || 0;
+
+            const pointGeometry = new THREE.SphereGeometry(0.2, 6.4, 6.4);
+            const pointMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff }); 
+            const pointMesh = new THREE.Mesh(pointGeometry, pointMaterial);
+
+            pointMesh.position.set(x, y, z);
+            app.scene.add(pointMesh);
+            app.renderer.render(app.scene, app.camera);
+
+            closeAddPointModal();
+            updateCameraCoordinates();
+        }
+
+        function updateCameraCoordinates() {
+            const coordinatesDiv = document.getElementById('camera-coordinates');
+            coordinatesDiv.textContent = `Camera Coordinates: (x, y, z) = (${app.camera.position.x.toFixed(2)}, ${app.camera.position.y.toFixed(2)}, ${app.camera.position.z.toFixed(2)})`;
+        }
+
         function changeCameraPosition(axis, direction) {
-            const step = 1; // You can adjust the step value as needed
+            const step = 1; 
             switch (axis) {
                 case 'x':
                     app.camera.position.x += (direction === '+') ? step : -step;
@@ -274,15 +321,22 @@
             }
             app.camera.updateProjectionMatrix();
             app.renderer.render(app.scene, app.camera);
+            
+            updateCameraCoordinates();
         }
+
         function recenterCamera() {
             app.camera.position.set(5, 5, 5);
             app.camera.lookAt(0, 0, 0);
             app.renderer.render(app.scene, app.camera);
+            updateCameraCoordinates();
         }
 
     
-        document.addEventListener('DOMContentLoaded', initThreeJSApp);
+        document.addEventListener('DOMContentLoaded', function() {
+            initThreeJSApp();
+            updateCameraCoordinates();
+        });
     </script>
 </body>
 </html>

@@ -627,28 +627,46 @@ app.post('/confirmDeleteStudent', async (req, res) => {
   const forename = req.session.forename;
   const surname = req.session.surname;
   const val = "deleteStudent1";
-  const email = req.session.currentUserEmail
+  const email = req.session.currentUserEmail;
+
   if (confirmation === 'no') {
     const resultString = "Cancelled deletion.";
     res.render("teacherProfile", { email, forename, surname, val, resultString });
     return;
   }
+
   try {
-    db.get("DELETE From Student WHERE Email = ?", [studentEmail], function(err) {
-      if (err) {
-        resultString = err
-        res.render("teacherProfile", { email, forename, surname, val, resultString });
-      }
-      else {
-        const resultString = "Student deleted successfully.";
-        res.render("teacherProfile", { email, forename, surname, val, resultString });
-      }
-    })
+    console.log(`Deleting student with email: ${studentEmail}`);
+
+    db.run("BEGIN TRANSACTION");
+
+    // Get student ID using the provided function
+    const studentID = await getStudentIDByEmail(studentEmail);
+
+    if (!studentID) {
+      throw new Error(`Student not found with email: ${studentEmail}`);
+    }
+
+    const progressID = await getProgressID(studentID);
+    db.run("DELETE FROM Prog_Intersection WHERE ProgressID = ?", [progressID]);
+    db.run("DELETE FROM Prog_Distance WHERE ProgressID = ?", [progressID]);
+    db.run("DELETE FROM Prog_Planes WHERE ProgressID = ?", [progressID]);
+    db.run("DELETE FROM Progress WHERE StudentID = ?", [studentID]);
+    db.run("DELETE FROM Student WHERE Email = ?", [studentEmail]);
+
+    console.log(`Deletion successful for student with email: ${studentEmail}`);
+    db.run("COMMIT");
+    
+    const resultString = "Student deleted successfully.";
+    res.render("teacherProfile", { email, forename, surname, val, resultString });
+
   } catch (error) {
     console.error('Error:', error);
+    db.run("ROLLBACK");
     res.status(500).send('Internal Server Error');
   }
 });
+
 
 app.get('/addStudent', (req, res) => {
   console.log("Add student")
@@ -1215,88 +1233,3 @@ server.listen(3000,function(){
     console.log("Server listening on port: 3000");
     console.log("Server is running on 'http://localhost:3000/'");
 });
-
-
-// app.post('/update', function (req, res) {
-//   if (req.body.password1 != req.body.password2){
-//     console.log("No Match with new passwords")
-//     return res.send("No Match with new passwords")
-//   }
-//   else if (req.body.oldpassword == req.body.password1 || req.body.oldpassword == req.body.password2) {
-//     console.log("Isn't a new password")
-//     return res.send("Isn't a new password")
-//   }
-//   else {
-//     checkPassword(req.body.email, req.body.oldpassword)
-//     .then((result) => {
-//       if (result == "true") {
-//         db.get('UPDATE Accounts SET Password = ? WHERE Email = ?', [req.body.password1, req.body.email], function(err) {
-//           if (err) {
-//             return console.log(err.message);
-//           }
-//           else {
-//             console.log("Updated")
-//             res.send("Updated")
-//           }
-//         });
-//       }
-//       else {
-//         console.log(result)
-//         res.send(result)
-//       }
-//     })
-//     .catch((error) => {
-//       console.log(error.message);
-//     });
-//   }
-
-// });
-
-// app.post('/delete', function(req, res) {
-//   if (req.body.password1 != req.body.password2){
-//     console.log("These passwords dont match");
-//     return res.send("These passwords dont match");
-//   }
-//   else{
-//     checkPassword(req.body.email, req.body.password1)
-//     .then((result) => {
-//       if (result == "true") {
-//         db.get('DELETE FROM Accounts WHERE Email = ?', [req.body.email], function(err) {
-//           if (err) {
-//             return console.log(err.message);
-//           }
-//           else {
-//             console.log("Updated")
-//             res.send("Updated")
-//           }
-//         });
-//       } else {
-//         console.log(result)
-//         res.send(result)
-//       }
-//     })
-//     .catch((error) => {
-//       console.log(error.message)
-//     });
-//   };
-// });
-
-// app.post('/login', function(req, res) {
-//   errorMessage = null
-//   email = req.body.email
-//   password = req.body.password
-//   accounttype = studentOrTeacher(email)
-//   match = checkPassword(email, password)
-//   if (match == true){
-//     if (accounttype == "student"){
-//       res.render('/studentHome', {email});
-//     }
-//     if (accounttype == "teacher"){
-//       res.render('/otherForms', {email})
-//     }
-//   }
-//   else {
-//     res.render('login', {errorMessage : "No Match"})
-
-//   }
-// });
