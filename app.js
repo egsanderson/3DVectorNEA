@@ -284,6 +284,7 @@ app.get('/intersection-questions', (req, res) => {
   const result = null;
   const hint = null;
   const email = req.session.currentUserEmail;
+  console.log(coordinates)
   res.render("intersectionQuestion", { email, vector1, vector2, coordinates, result, hint });
 });
 
@@ -316,6 +317,7 @@ app.get('/distance-questions', (req, res) => {
   
     const values = vectorCalculation.DistanceVectorOperations.findShortestDistanceBetweenLines(vector1, vector2);
     const {formatVector1, formatVector2, distance} = values;
+    console.log(distance)
     res.render("distanceQuestion", { email, vector1 : formatVector1, vector2 : formatVector2, distance, result, val});
   }
   else if (val == false) {
@@ -325,6 +327,7 @@ app.get('/distance-questions', (req, res) => {
 
     const { point, distance } = values;
     const email = req.session.currentUserEmail;
+    console.log(distance)
     const formattedVector = vector.formatVector("p", "");
 
     res.render("distanceQuestion", { email, vector : formattedVector, point, distance, result, val});
@@ -358,6 +361,7 @@ app.get('/plane-questions', (req, res) => {
     const {  formattedVector, formattedPlane, coordinates  } = values;
     const email = req.session.currentUserEmail;
     const result = null;
+    console.log(coordinates)
     res.render("planeQuestion", { email, vector : formattedVector, plane : formattedPlane, coordinates, result, val});
   }
   else if (val == false) {
@@ -366,7 +370,7 @@ app.get('/plane-questions', (req, res) => {
     const result = null;
     const values =  vectorCalculation.PlaneVectorOperations.convertFromVectorToCartesian();
     const {vectorPlane, cartesianPlane } = values;
-
+    console.log(cartesianPlane)
     res.render("planeQuestion", {email, plane: vectorPlane, cartesian: cartesianPlane, result, val});
   }
 });
