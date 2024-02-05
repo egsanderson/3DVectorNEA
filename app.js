@@ -295,13 +295,14 @@ app.post("/intersection-check-answer", function(req, res) {
   const vector2 = req.body.vector2;
   const coordinates = req.body.coordinates;
   const dbName = "Prog_Intersection";
-  const result = userInput === coordinates ? 'Correct!' : 'Incorrect!';
+  var result = userInput === coordinates ? 'Correct!' : 'Incorrect!';
   if (result == 'Correct!'){
     var check = true;
   }
   else{
     var check = false;
   }
+  result = result + " Answer was " + coordinates + " !";
   updateProgTables(dbName, email, check)
   res.render("intersectionQuestion", { email, vector1, vector2, coordinates, result})
 });
@@ -340,13 +341,15 @@ app.post('/distance-check-answer', function(req, res) {
   const distance = req.body.distance;
   const dbName = "Prog_Distance";
   
-  const result = userInput === distance ? 'Correct!' : 'Incorrect!';
+  var result = userInput === distance ? 'Correct!' : 'Incorrect!';
   if (result == 'Correct!'){
     var check = true;
   }
   else{
     var check = false;
   }
+  result = result + " Answer was " + distance + " !";
+
   updateProgTables(dbName, email, check)
   res.render("distanceQuestion", { email, result});
 })
@@ -382,25 +385,28 @@ app.post('/plane-check-answer', function(req, res) {
   const val = req.body.val;
   if (val == "true") {
     const coordinates = req.body.coordinates;
-    const result = userInput === coordinates ? 'Correct!' : 'Incorrect!';
+    var result = userInput === coordinates ? 'Correct!' : 'Incorrect!';
     if (result == 'Correct!'){
       var check = true;
     }
     else{
       var check = false;
     }
+    result = result + " Answer was " + coordinates + " !";
     updateProgTables(dbName, email, check)
     res.render("planeQuestion", { email, result});
   }
   else if (val == "false") {
     const cartesian = req.body.cartesian;
-    const result = userInput === cartesian ? 'Correct!' : 'Incorrect!';
+    var result = userInput === cartesian ? 'Correct!' : 'Incorrect!';
     if (result == 'Correct!'){
       var check = true;
     }
     else{
       var check = false;
     }
+    result = result + " Answer was " + cartesian + " !";
+
     updateProgTables(dbName, email, check)
     res.render("planeQuestion", { email, result});
   }
@@ -670,7 +676,6 @@ app.post('/confirmDeleteStudent', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
 
 app.get('/addStudent', (req, res) => {
   console.log("Add student")
