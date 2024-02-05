@@ -2,20 +2,33 @@
 <html>
     <head>
         <title>Create an account</title>
+        <link rel="stylesheet" href="../public/css/style.css">
+        <script src="../public/js/main.js"></script>
         <link rel="icon" type="image/x-icon" href="../public/images/favicon.png">
         <meta charset="UTF-8">
     </head>
     <body>
-        <form id="accountType-form" action="/accountType" method="POST">
+        <nav id="mainNav">
+            <ul>
+                <li><a href="#" id="createAccountButton">Create An Account</a></li>
+                <li><a href="#" id="loginButton">Login</a></li>
+            </ul>
+          </nav>
+          <form id="accountType-form" action="/accountType" method="POST">
             <fieldset>
-                <h3>Are you a student or a teacher</h3>
-                <input type="radio" id="teacher" name="account_type" value="teacher" required>
-                <label for="teacher">Teacher</label><br>
-                <input type="radio" id="student" name="account_type" value="student" required>
-                <label for="student">Student</label><br>
+                <h3>Account Type</h3>
+                <div class="radio-group">
+                    <input type="radio" id="teacher" name="account_type" value="teacher" required>
+                    <label for="teacher">Teacher</label>
+                    
+                    <input type="radio" id="student" name="account_type" value="student" required>
+                    <label for="student">Student</label>
+                </div>
                 <br>
                 <button type="submit">Submit</button>
             </fieldset>
         </form>
+        
+        
     </body>
 </html>

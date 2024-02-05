@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Distance Questions</title>
+        <link rel="stylesheet" href="../public/css/style.css">
+        <link rel="icon" type="image/x-icon" href="../public/images/favicon.png">
+        <script src="../public/js/main.js"></script>
+        <style>
+            .hint-popup {
+                display: none;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                border: 3px solid #f1f1f1;
+                z-index: 10;
+                max-width: 400px;
+                padding: 10px;
+                background-color: white;
+            }
+
+            .hint-image {
+                width: 100%;
+                height: auto;
+                display: none;
+            }
+
+            .close-hint {
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <nav id="studentNav">
+            <ul>
+                <li class="dropdown">
+                    <a href="#" id="questionsButton">Questions</a>
+                    <div class="dropdown-content">
+                        <a href="#" id="intersectionButton">Intersection</a>
+                        <a href="#" id="distanceButton">Distance</a>
+                        <a href="#" id="planesButton">Planes</a>
+                    </div>
+                </li>
+                <li><a href="#" id="StudentprogressButton">Progress</a></li>
+                <li><a href="#" id="drawButton">Draw Vector</a></li>
+                <li class="dropdown">
+                    <a href="#" id="profileButton">Profile - [/- email /]</a>
+                    <div class="dropdown-content">
+                        <a href="#" id="StudentprofileButton">View Profile</a>
+                        <a href="#" id="logoutButton">Logout</a>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+        <h1>Distance Questions</h1>
+
+        [/ if (result) { /]
+            <p>[/- result /]</p>
+            <p>Would you like to answer another question?</p>
+            <a href="/distance-questions" id="repeatButton-Yes">Yes</a>
+            <a href="/HomePage" id="repeatButton-No">No</a>
+        [/ } else if (val == true) { /]
+            <h3>Distance between two skew lines</h3>
+            <p>[/- vector1 /]</p>
+            <p>[/- vector2 /]</p>
+            <!-- <p>[/- distance /]</p> -->
+
+            <form action="/distance-check-answer" method="POST">
+                <input type="hidden" id="vector1" name="vector1" value="[/- vector1 /]">
+                <input type="hidden" id="vector2" name="vector2" value="[/- vector2 /]">
+                <input type="hidden" id="distance" name="distance" value="[/- distance /]">
+                <input type="hidden" id="val" name="val" value="[/- val /]">
+
+                <label for="userInput">Enter Distance:</label>
+                <input type="text" id="userInput" name="userInput" required>
+                <button type="submit">Check Answer</button>
+
+                <button type="button" onclick="showHint()">Hint</button>
+            </form>
+        [/ } else if (val == false) { /]
+            <h3>Distance between a point and a line</h3>
+            <p>[/- vector /]</p>
+            <p>[/- point /]</p>
+            <!-- <p>[/- distance /]</p> -->
+
+            <form action="/distance-check-answer" method="POST">
+                <input type="hidden" id="vector" name="vector" value="[/- vector /]">
+                <input type="hidden" id="point" name="point" value="[/- point /]">
+                <input type="hidden" id="distance" name="distance" value="[/- distance /]">
+                <input type="hidden" id="val" name="val" value="[/- val /]">
+
+                <label for="userInput">Enter Distance:</label>
+                <input type="text" id="userInput" name="userInput" required>
+                <button type="submit">Check Answer</button>
+                <button type="button" onclick="showHint()">Hint</button>
+            </form>
+        [/ } /]
+
+        <div id="hint-popup" class="hint-popup">
+            <span class="close-hint" onclick="closeHint()">&times;</span>
+            <img class="hint-image" src="../public/images/distanceHint.png" alt="Hint Image">
+        </div>
+
+        <script>
+            function showHint() {
+                document.querySelector('.hint-image').style.display = 'block';
+                document.querySelector('.hint-popup').style.display = 'block';
+            }
+
+            function closeHint() {
+                document.querySelector('.hint-image').style.display = 'none';
+                document.querySelector('.hint-popup').style.display = 'none';
+            }
+        </script>
+    </body>
+</html>

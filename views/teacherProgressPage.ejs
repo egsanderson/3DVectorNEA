@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Page</title>
+    <link rel="icon" type="image/x-icon" href="../public/images/favicon.png">
+    <link rel="stylesheet" href="../public/css/style.css">
+    <style>
+      #chartContainer {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: space-evenly;
+      }
+  
+      .student-section {
+          text-align: center;
+          width: calc(25% - 20px);
+          margin: 10px;
+      }
+  
+      .chart-item {
+          margin-top: 20px;
+      }
+  
+      .student-header {
+          font-weight: bold;
+      }
+  </style>
+    <script src="../public/js/main.js"></script>
+</head>
+<body id="progressPage">
+
+    <nav id="teacherNav">
+        <ul>
+            <li><a href="#" id="ClassprogressButton">Class Progress</a></li>
+            <li><a href="#" id="drawButton">Draw Vector</a></li>
+            <li class="dropdown">
+                <a href="#" id="profileButton">Profile - [/- email /]</a>
+                <div class="dropdown-content">
+                    <a href="#" id="Teacherprofilebutton">View Profile</a>
+                    <a href="#" id="ViewStudents">View Students</a>
+                    <a href="#" id="ChangeYourPassword">Change Your Password</a>
+                    <a href="#" id="ChangeStudentPassword">Change Student Password</a>
+                    <a href="#" id="DeleteStudent">Delete A Student</a>
+                    <a href="#" id="AddStudent">Add A Student</a>
+                    <a href="#" id="logoutButton">Logout</a>
+                </div>
+            </li>
+        </ul>
+    </nav>
+
+
+    <div class="chart-container" id="chartContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <script>
+        var progressData = [/- JSON.stringify(studentProgressData) /];
+
+        var chartContainer = document.getElementById('chartContainer');
+
+        progressData.forEach(function(studentProgress) {
+            var studentSection = document.createElement('div');
+            studentSection.className = 'student-section';
+
+            var studentHeader = document.createElement('div');
+            studentHeader.className = 'student-header';
+            studentHeader.textContent = studentProgress.forename + ' ' + studentProgress.surname + ' - ' + studentProgress.table;
+
+            var chartItem = document.createElement('div');
+            chartItem.className = 'chart-item';
+
+            var canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 200;
+            canvas.id = studentProgress.table + 'PieChart-' + studentProgress.studentID;
+
+            chartItem.appendChild(canvas);
+            studentSection.appendChild(studentHeader);
+            studentSection.appendChild(chartItem);
+            chartContainer.appendChild(studentSection);
+
+            setTimeout(function() {
+                new Chart(canvas, {
+                    type: 'pie',
+                    data: {
+                        labels: ["Correct Answers", "Incorrect Answers"],
+                        datasets: [{
+                            backgroundColor: ["#008000", "#FF0000"],
+                            data: [studentProgress.correctAnswers, studentProgress.incorrectAnswers]
+                        }]
+                    },
+                    options: {
+                        title: {
+                            display: true,
+                            text: studentProgress.forename + ' ' + studentProgress.surname + ' - ' + studentProgress.table
+                        }
+                    }
+                });
+            }, 0);
+        });
+    </script>
+</body>
+</html>

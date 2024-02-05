@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Page</title>
+    <link rel="icon" type="image/x-icon" href="../public/images/favicon.png">
+    <link rel="stylesheet" href="../public/css/style.css">
+    <script src="../public/js/main.js"></script>
+
+</head>
+<body id="progressPage">
+
+    <nav id="studentNav">
+        <ul>
+            <li class="dropdown">
+                <a href="#" id="questionsButton">Questions</a>
+                <div class="dropdown-content">
+                    <a href="#" id="intersectionButton">Intersection</a>
+                    <a href="#" id="distanceButton">Distance</a>
+                    <a href="#" id="planesButton">Planes</a>
+                </div>
+            </li>
+            <li><a href="#" id="StudentprogressButton">Progress</a></li>
+            <li><a href="#" id="drawButton">Draw Vector</a></li>
+            <li class="dropdown">
+                <a href="#" id="profileButton">Profile - [/- email /]</a>
+                <div class="dropdown-content">
+                    <a href="#" id="StudentprofileButton">View Profile</a>
+                    <a href="#" id="logoutButton">Logout</a>
+                </div>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="chart-container">
+        <div class="chart-item">
+            <h1>Overview</h1>
+            <canvas id="OverviewPieChart" width="200" height="200"></canvas>
+        </div>
+        <div class="chart-item">
+            <h1>Intersection Progress</h1>
+            <canvas id="IntersectionPieChart" width="200" height="200"></canvas>
+        </div>
+        <div class="chart-item">
+            <h1>Distance Progress</h1>
+            <canvas id="DistancePieChart" width="200" height="200"></canvas>
+        </div>
+        <div class="chart-item">
+            <h1>Planes Progress</h1>
+            <canvas id="PlanesPieChart" width="200" height="200"></canvas>
+        </div>
+    </div>
+
+
+    <script
+    src="https://cdn.jsdelivr.net/npm/chart.js@4.0.1/dist/chart.umd.min.js"></script>
+    <script>
+
+        var progressData = [/- JSON.stringify(progressData) /];
+
+        var dataArrays = progressData.map(function (data) {
+            return {
+                table: data.table,
+                correctAnswers: data.correctAnswers,
+                incorrectAnswers: data.incorrectAnswers
+            };
+        });
+
+        var tableDataArray = [
+            ['Progress', 'OverviewPieChart'],
+            ['Prog_Intersection', 'IntersectionPieChart'],
+            ['Prog_Distance', 'DistancePieChart'],
+            ['Prog_Planes', 'PlanesPieChart']
+        ];
+
+        for(var i = 0; i <= 3; i++){
+            var progressEntry = dataArrays.find(function (entry) {
+            return entry.table === tableDataArray[i][0];
+            });
+            var progressCorrectAnswers = progressEntry ? progressEntry.correctAnswers : 0;
+            var progressIncorrectAnswers = progressEntry ? progressEntry.incorrectAnswers : 0;
+            new Chart(document.getElementById(tableDataArray[i][1]), {
+                type: 'pie',
+                data: {
+                    labels: ["Correct Answers", "Incorrect Answers"],
+                    datasets: [{
+                        backgroundColor: ["#008000", "#FF0000"],
+                        data: [progressCorrectAnswers, progressIncorrectAnswers]
+                    }]
+                },
+                options: {
+                    title: {
+                        display: true,
+                        text: 'ProgressPieChart'
+                    }
+                }
+            });
+        }
+
+
+    </script>
+</body>
+</html>

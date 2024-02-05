@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <Title>Profile</Title>
+        <link rel="stylesheet" href="../public/css/style.css">
+        <link rel="icon" type="image/x-icon" href="../public/images/favicon.png">
+        <script src="../public/js/main.js"></script>
+    </head>
+    <body>
+        <nav id="teacherNav">
+            <ul>
+                <li><a href="#" id="ClassprogressButton">Class Progress</a></li>
+                <li><a href="#" id="drawButton">Draw Vector</a></li>
+                <li class="dropdown">
+                    <a href="#" id="profileButton">Profile - [/- email /]</a>
+                    <div class="dropdown-content">
+                        <a href="#" id="Teacherprofilebutton">View Profile</a>
+                        <a href="#" id="ViewStudents">View Students</a>
+                        <a href="#" id="ChangeYourPassword">Change Your Password</a>
+                        <a href="#" id="ChangeStudentPassword">Change Student Password</a>
+                        <a href="#" id="DeleteStudent">Delete A Student</a>
+                        <a href="#" id="AddStudent">Add A Student</a>
+                        <a href="#" id="logoutButton">Logout</a>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+
+        <h1>Teacher Profile</h1>
+        <h2>Hi, [/- forename /] [/- surname /]</h2>
+
+        [/ if (val == "profile") { /]
+            <h3>Here is your classcode to share with students: </h3>
+            <h2>[/- classcode /]</h2>
+        [/ } else if (val == "viewStudents") { /]
+            <h3>Here are the students linked to your class: </h3>
+            <p>[/- resultString /]</p>
+        [/ } else if (val == "changeYourPassword") { /]
+            <form id="changePassword-form" action="/changePassword" method="POST">
+                <fieldset>
+                    <h3>Change Your Password</h3>
+                    [/ if (resultString) { /]
+                        <p style="color: red;">[/- resultString /]</p>
+                    [/ } /]
+                    <label>Email</label>
+                    <input type="text" id="email" name="email" required>
+                    <br><br>
+                    <label>Current Password</label>
+                    <input type="password" id="password" name="password" required>
+                    <br><br>
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" name="newPassword" required>
+                    <br><br>
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    <br><br>
+                    <button type="reset">Reset</button>
+                    <button type="submit">Submit</button>
+                </fieldset>
+            </form>
+        [/ } else if (val == "changeStudentPassword") { /]
+            <form id="changeStudentPassword-form" action="/changeStudentPassword" method="POST">
+                <fieldset>
+                    <h3>Change Student Password</h3>
+                    [/ if (resultString) { /]
+                        <p style="color: red;">[/- resultString /]</p>
+                    [/ } /]
+                    <label>Email</label>
+                    <input type="text" id="email" name="email" required>
+                    <br><br>
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" name="newPassword" required>
+                    <br><br>
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    <br><br>
+                    <button type="reset">Reset</button>
+                    <button type="submit">Submit</button>
+                </fieldset>
+            </form>
+        [/ } else if (val == "deleteStudent1") {/]
+            <form id="deleteStudentEmail-form" action="/deleteStudentCheck" method="POST">
+                <fieldset>
+                    <h3>Enter Students Email</h3>
+                    [/ if (resultString) { /]
+                        <p style="color: red;">[/- resultString /]</p>
+                    [/ } /]
+                    <label>Email</label>
+                    <input type="text" id="email" name="email" required>
+                    <br><br>
+                    <button type="reset">Reset</button>
+                    <button type="submit">Submit</button>
+                </fieldset>
+            </form>
+        [/ } else if (val == "deleteStudent2") { /]
+            <form id="deleteStudentEmail-form" action="/confirmDeleteStudent" method="POST">
+                <fieldset>
+                    [/ if (resultString) { /]
+                        <p style="color: red;">[/- resultString /]</p>
+                    [/ } /]
+                    <label for="yes">Yes</label>
+                    <input type="radio" id="yes" name="confirmation" value="yes" required>
+                    <br><br>
+                    <label for="no">No</label>
+                    <input type="radio" id="no" name="confirmation" value="no" required>
+                    <br><br>
+                    <label>Email</label>
+                    <input type="text" id="Studentemail" name="Studentemail" required>
+                    <br><br>
+                    <button type="reset">Reset</button>
+                    <button type="submit">Submit</button>
+                </fieldset>
+            </form>
+        [/ } else if (val == "addStudent") { /]
+            <form id="addStudentForm" action="/addStudentForm" method="POST">
+                <fieldset>
+                  <h3>Create a student account</h3> 
+                  [/ if (resultString) { /]
+                    <p style="color: red;">[/- resultString /]</p>
+                  [/ } /]
+                  <label>First Name</label>
+                  <input type="text" id="forename" name="forename" required>
+                  <br><br>
+                  <label>Surname</label>
+                  <input type="text" id="surname" name="surname" required>
+                  <br><br>
+                  <label>Email</label>
+                  <input type="text" id="email" name="email" required>
+                  <br><br>
+                  <label>Password</label>
+                  <input type="password" id="password" name="password" required>
+                  <br><br>
+                  <label>Confirm Password</label>
+                  <input type="password" id="confirmPassword" name="confirmPassword" required>
+                  <br><br>
+                  <button type="reset">Reset</button>
+                  <button type="submit">Submit</button>
+                </fieldset>
+              </form>
+        [/ } /]
+
+    </body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Intersection Questions</title>
+        <link rel="stylesheet" href="../public/css/style.css">
+        <link rel="icon" type="image/x-icon" href="../public/images/favicon.png">
+        <script src="../public/js/main.js"></script>
+    </head>
+    <body>
+        <nav id="studentNav">
+            <ul>
+                <li class="dropdown">
+                    <a href="#" id="questionsButton">Questions</a>
+                    <div class="dropdown-content">
+                        <a href="#" id="intersectionButton">Intersection</a>
+                        <a href="#" id="distanceButton">Distance</a>
+                        <a href="#" id="planesButton">Planes</a>
+                    </div>
+                </li>
+                <li><a href="#" id="StudentprogressButton">Progress</a></li>
+                <li><a href="#" id="drawButton">Draw Vector</a></li>
+                <li class="dropdown">
+                    <a href="#" id="profileButton">Profile - [/- email /]</a>
+                    <div class="dropdown-content">
+                        <a href="#" id="StudentprofileButton">View Profile</a>
+                        <a href="#" id="logoutButton">Logout</a>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+        <h1>Plane Questions</h1>
+        
+        [/ if (result) { /]
+            <p>[/- result /]</p>
+            <p>Would you like to answer another question?</p>
+           <a href="/plane-questions" id="repeatButton-Yes">Yes</a>
+            <a href="/HomePage" id="repeatButton-No">No</a>
+        [/ } else if (val == true) { /]
+            <h3>The coordinate of intersection between a vector and a plane</h3>
+            <p>[/- vector /]</p>
+            <p>[/- plane /]</p>
+            <!-- <p>[/- coordinates /]</p> -->
+
+            <form action="/plane-check-answer" method="POST">
+                <input type="hidden" id="vector1" name="vector1" value="[/- vector /]">
+                <input type="hidden" id="vector2" name="vector2" value="[/- plane /]">
+                <input type="hidden" id="coordinates" name="coordinates" value="[/- coordinates /]">
+                <input type="hidden" id="val" name="val" value="[/- val /]">
+
+                <label for="userInput">Enter Coordinates:</label>
+                <input type="text" id="userInput" name="userInput" required>
+                <button type="submit">Check Answer</button>
+            </form>
+        [/ } else if (val == false) { /]
+            <h3>Convert a vector plane equation to cartesian form</h3>
+            <p>[/- plane /]</p>
+            <!-- <p>[/- cartesian /]</p> -->
+
+            
+            <form action="/plane-check-answer" method="POST">
+                <input type="hidden" id="plane" name="plane" value="[/- plane /]">
+                <input type="hidden" id="cartesian" name="cartesian" value="[/- cartesian /]">
+                <input type="hidden" id="val" name="val" value="[/- val /]">
+
+                <label for="userInput">Enter Cartesian Form:</label>
+                <input type="text" id="userInput" name="userInput" required>
+                <button type="submit">Check Answer</button>
+            </form>
+        [/ } /]
+
+    </body>
+</html>

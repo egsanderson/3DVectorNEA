@@ -12,9 +12,6 @@ ul {
 li {
     float: left;
 }
-#profileButton {
-    float: right;
-}
 
 li a {
     display: block;
@@ -30,6 +27,43 @@ li a:hover {
 
 nav#studentNav{
     background-color: #0a3273;
+}
+
+nav#teacherNav{
+    background-color: #063061;
+}
+
+.dropdown {
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #cee7ff;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.dropdown-content a {
+    color: #000; 
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #0a3273;
+    color: #fff;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+#questionsButton:hover {
+    background-color: #111;
 }
 
 #classCodeStudent {
@@ -69,52 +103,6 @@ nav#studentNav{
 }
 
 
-
-#center-frame {
-    display: inline-block;
-    border: 1px solid #000;
-    padding: 20px;
-    align-content: center;
-    background-color: #f0f0f0;
-}
-
-
-#button-container {
-    display: flex;
-    align-content: center;
-    justify-content: space-around;
-    background-color: #e0e0e0;
-    padding: 10px;
-    border-radius: 10px;
-}
-
-#intersectionButton {
-    background-color: blue;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    cursor: pointer;
-    text-decoration: none;
-}
-
-#distanceButton {
-    background-color: blue;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    cursor: pointer;
-    text-decoration: none;
-}
-
-#planesButton {
-    background-color: blue;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    cursor: pointer;
-    text-decoration: none;
-}
-
 #repeatButton-Yes {
     background-color: green;
     color: white;
@@ -131,4 +119,184 @@ nav#studentNav{
     border: none;
     cursor: pointer;
     text-decoration: none;
+}
+
+.chart-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center; 
+}
+
+.chart-item {
+    flex: 1 0 200px;
+    margin: 10px;
+    text-align: center;
+}
+
+#registration-container,
+#login-form,
+#accountType-form {
+    max-width: 450px;
+    margin: 50px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+
+#registration-container h3,
+#login-form h3,
+#accountType-form h3 {
+    text-align: center;
+    color: #333;
+}
+
+#registration-container label,
+#login-form label,
+#accountType-form label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+}
+
+#registration-container input,
+#login-form input,
+#accountType-form input {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#registration-container button,
+#login-form button,
+#accountType-form button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #04AA6D;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#registration-container button[type="reset"],
+#login-form button[type="reset"],
+#accountType-form button[type="reset"] {
+    background-color: #ccc;
+    margin-right: 10px;
+}
+
+#registration-container button:hover,
+#login-form button:hover,
+#accountType-form button:hover {
+    opacity: 0.9;
+}
+
+#accountType-form .radio-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the radio button labels horizontally */
+}
+
+#accountType-form input {
+    margin-bottom: 5px;
+}
+
+#accountType-form label {
+    margin-bottom: 10px;
+    text-align: center; /* Center the radio button labels */
+}
+
+#changePassword-form,
+#changeMyStudentPassword-form,
+#changeStudentPassword-form,
+#deleteStudentEmail-form,
+#confirmDeleteStudent-form,
+#addStudentForm {
+    max-width: 450px;
+    margin: 50px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+
+#changePassword-form h3,
+#changeMyStudentPassword-form h3, 
+#changeStudentPassword-form h3,
+#deleteStudentEmail-form h3,
+#confirmDeleteStudent-form h3,
+#addStudentForm h3 {
+    text-align: center;
+    color: #333;
+}
+
+#changePassword-form label,
+#changeStudentPassword-form label,
+#changeMyStudentPassword-form label,
+#deleteStudentEmail-form label,
+#confirmDeleteStudent-form label,
+#addStudentForm label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+}
+
+#changePassword-form input,
+#changeStudentPassword-form input,
+#deleteStudentEmail-form input,
+#changeMyStudentPassword-form input,
+#confirmDeleteStudent-form input,
+#addStudentForm input {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#changePassword-form button,
+#changeStudentPassword-form button,
+#deleteStudentEmail-form button,
+#changeMyStudentPassword-form button,
+#confirmDeleteStudent-form button,
+#addStudentForm button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #04AA6D;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#changePassword-form button[type="reset"],
+#changeStudentPassword-form button[type="reset"],
+#deleteStudentEmail-form button[type="reset"],
+#confirmDeleteStudent-form button[type="reset"],
+#changeMyStudentPassword-form button[type="reset"],
+#addStudentForm button[type="reset"] {
+    background-color: #ccc;
+    margin-right: 10px;
+}
+
+#changePassword-form button:hover,
+#changeStudentPassword-form button:hover,
+#deleteStudentEmail-form button:hover,
+#changeMyStudentPassword-form button:hover,
+#confirmDeleteStudent-form button:hover,
+#addStudentForm button:hover {
+    opacity: 0.9;
+}
+body {
+    text-align: center;
+}
+
+h1, h2, h3 {
+    text-align: center;
 }
