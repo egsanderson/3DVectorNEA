@@ -35,7 +35,7 @@ app.use(session({
   saveUninitialized: true,
 }));
 
-var db = new sqlite3.Database('./database/UserAccounts');
+var db = new sqlite3.Database('./database/UserAccounts.sqlite');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.set('view engine', 'ejs');
@@ -86,8 +86,7 @@ app.post('/add', async (req, res) => {
     console.log(password);
     const hashedPassword = await hashPassword(password);
 
-    if (accountType === "teacher") {
-      const classCode = createClassCode();
+      if (accountType === "teacher") {
 
       db.serialize(() => {
         db.run(
@@ -102,26 +101,12 @@ app.post('/add', async (req, res) => {
             } else {
               getTeacherID(email)
                 .then((teacherID) => {
-                  db.run('INSERT INTO Classcode(ClasscodeID, TeacherID) VALUES (?, ?)',
-                    [classCode, teacherID],
-                    (err) => {
-                      if (err) {
-                        req.session.errorMessage = err.message.includes('UNIQUE constraint failed') ?
-                          'The email already exists' : err.message;
-                        console.error(req.session.errorMessage);
-                        res.render('createAccount', { accountType, errorMessage: req.session.errorMessage });
-                      } else {
-                        console.log(`New ${accountType} has been added`);
-                        //UPDATES
-                        req.session.currentUserEmail = email;
-                        req.session.forename = req.body.forename;
-                        req.session.surname = req.body.surname;
-                        req.session.id = teacherID;
-                        req.session.classcode = classCode;
-                        //UPDATES
-                        res.render('Home', { email, role: "Teacher" });
-                      }
-                    });
+                  console.log(`New ${accountType} has been added`);
+                  req.session.currentUserEmail = email;
+                  req.session.forename = req.body.forename;
+                  req.session.surname = req.body.surname;
+                  req.session.CurrentId = teacherID;
+                  res.render('Home', { email, role: "Teacher" });
                 })
                 .catch((err) => {
                   req.session.errorMessage = err.message.includes('UNIQUE constraint failed') ?
@@ -147,7 +132,7 @@ app.post('/add', async (req, res) => {
             req.session.currentUserEmail = email;
             req.session.forename = req.body.forename;
             req.session.surname = req.body.surname;
-            req.session.id = this.lastID;
+            req.session.CurrentId = this.lastID;
             ProgessDatabase(this.lastID);
             res.render('classroomCodePopup.ejs', { email });
           }
@@ -182,13 +167,12 @@ app.post('/login', async (req, res) => {
       req.session.surname = user.Surname;
       if (user.StudentID !== undefined) {
         const studentID = await getStudentIDByEmail(email);
-        req.session.id = studentID;
-        req.session.classcode = user.ClasscodeID;
+        req.session.CurrentId = studentID;
       } else if (user.TeacherID !== undefined) {
-        req.session.id = user.TeacherID
-        const classcode = await getClasscodeIDByTeacherID(user.TeacherID);
-        req.session.classcode = classcode
+        const teacherID = await getTeacherID(email);
+        req.session.CurrentId = teacherID
       }
+
       if (accountType && accountType.toLowerCase() === 'student') {
         res.render('home', { email, role: "Student" });
       } else if (accountType && accountType.toLowerCase() === 'teacher') {
@@ -245,11 +229,10 @@ app.get('/draw-page', async (req, res) => {
 });
 
 app.post('/studentAddCode', function(req, res) {
-  console.log(req.body.classCode)
-  const classCode = req.body.classCode
+  console.log(req.body.teacherID)
+  const teacherID = req.body.teacherID
   const email = req.session.currentUserEmail;
-
-  setClassCode(classCode, email)
+  setUpClassLink(teacherID, email)
   res.render('home', { email, role: "Student" });
 });
 
@@ -269,9 +252,9 @@ app.get('/teacherProfile-page', async function(req, res) {
       const val = "profile"
       const forename = req.session.forename;
       const surname = req.session.surname;
-      const classcode = req.session.classcode
+      const id = req.session.CurrentId
 
-      res.render("teacherProfile", { email, forename, surname, classcode, val, resultString : null});
+      res.render("teacherProfile", { email, forename, surname, id, val, resultString : null});
 
     } catch (error) {
       console.error('Error:', error);
@@ -295,13 +278,14 @@ app.post("/intersection-check-answer", function(req, res) {
   const vector2 = req.body.vector2;
   const coordinates = req.body.coordinates;
   const dbName = "Prog_Intersection";
-  const result = userInput === coordinates ? 'Correct!' : 'Incorrect!';
+  var result = userInput === coordinates ? 'Correct!' : 'Incorrect!';
   if (result == 'Correct!'){
     var check = true;
   }
   else{
     var check = false;
   }
+  result = result + " Answer was " + coordinates + " !";
   updateProgTables(dbName, email, check)
   res.render("intersectionQuestion", { email, vector1, vector2, coordinates, result})
 });
@@ -340,13 +324,15 @@ app.post('/distance-check-answer', function(req, res) {
   const distance = req.body.distance;
   const dbName = "Prog_Distance";
   
-  const result = userInput === distance ? 'Correct!' : 'Incorrect!';
+  var result = userInput === distance ? 'Correct!' : 'Incorrect!';
   if (result == 'Correct!'){
     var check = true;
   }
   else{
     var check = false;
   }
+  result = result + " Answer was " + distance + " !";
+
   updateProgTables(dbName, email, check)
   res.render("distanceQuestion", { email, result});
 })
@@ -382,25 +368,28 @@ app.post('/plane-check-answer', function(req, res) {
   const val = req.body.val;
   if (val == "true") {
     const coordinates = req.body.coordinates;
-    const result = userInput === coordinates ? 'Correct!' : 'Incorrect!';
+    var result = userInput === coordinates ? 'Correct!' : 'Incorrect!';
     if (result == 'Correct!'){
       var check = true;
     }
     else{
       var check = false;
     }
+    result = result + " Answer was " + coordinates + " !";
     updateProgTables(dbName, email, check)
     res.render("planeQuestion", { email, result});
   }
   else if (val == "false") {
     const cartesian = req.body.cartesian;
-    const result = userInput === cartesian ? 'Correct!' : 'Incorrect!';
+    var result = userInput === cartesian ? 'Correct!' : 'Incorrect!';
     if (result == 'Correct!'){
       var check = true;
     }
     else{
       var check = false;
     }
+    result = result + " Answer was " + cartesian + " !";
+
     updateProgTables(dbName, email, check)
     res.render("planeQuestion", { email, result});
   }
@@ -507,24 +496,35 @@ app.get('/viewStudents', async (req, res) => {
   const forename = req.session.forename;
   const surname = req.session.surname;
   const val = "viewStudents";
+
   try {
-      const rows = await getAllStudentDataForTeacher(email);
-      console.log(rows)
-      if (rows && rows.length > 0) {
-        const formattedStrings = rows.map(student => {
-          const fullName = `${student.Forename} ${student.Surname}`;
-          const email = student.Email;
-          return `${fullName} - ${email}`;
-        });
-        resultString = formattedStrings.join('<br>');
-      } else {
-        resultString = "You do not have any students linked to you yet";
-      }
-      console.log(resultString)
-      res.render("teacherProfile", { email, forename, surname, val, resultString });
+    const teacherID = req.session.CurrentId;
+    
+    if (!teacherID) {
+      console.log("TeacherID not found for the given email");
+      return res.status(404).send('Teacher not found');
+    }
+
+    const students = await getStudentsByTeacherID(teacherID);
+
+    if (!students || students.length === 0) {
+      resultString = "You do not have any students linked to you yet";
+    } else {
+      const formattedStrings = students.map(student => {
+        const fullName = `${student.Forename} ${student.Surname}`;
+        const email = student.Email;
+        return `${fullName} - ${email}`;
+      });
+
+      resultString = formattedStrings.join('<br>');
+    }
+
+    console.log(resultString);
+    res.render("teacherProfile", { email, forename, surname, val, resultString });
+
   } catch (error) {
-      console.error('Error:', error);
-      res.status(500).send('Internal Server Error');
+    console.error('Error:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
 
@@ -594,28 +594,22 @@ app.get('/deleteStudent', (req, res) => {
 
 app.post('/deleteStudentCheck', async (req,res) => {
   const studentEmail = req.body.email;
-  const email = req.session.currentUserEmail
-  const teacherClasscodeID = req.session.classcode;
-  const forename = req.session.forename
-  const surname = req.session.surname
+  const email = req.session.currentUserEmail;
+  const teacherID = req.session.CurrentId;
+  const forename = req.session.forename;
+  const surname = req.session.surname;
 
   try {
-    const studentInfo = await getUserByEmail(studentEmail, 'Student');
+    const studentInfo = await getUserByEmailWithClasscode(studentEmail, 'Student', teacherID);
 
     if (!studentInfo) {
       const resultString = "That student doesn't exist.";
       const val = "deleteStudent1";
-      res.render("teacherProfile", { email, forename, surname, val, resultString });
-      return;
+      return res.render("teacherProfile", { email, forename, surname, val, resultString });
     }
-    if (studentInfo.ClasscodeID !== teacherClasscodeID) {
-      const resultString = "That student is not linked to you.";
-      const val = "deleteStudent1";
-      res.render("teacherProfile", { email, forename, surname, val, resultString });
-      return;
-    }
+
     const formattedString = `${studentInfo.Forename} ${studentInfo.Surname} - ${studentInfo.Email}`;
-    const resultString = "Are you sure you wish to delete this student: " + formattedString + "<br>If you wish to continue then reenter students email";
+    const resultString = `Are you sure you wish to delete this student: ${formattedString}<br>If you wish to continue then reenter student's email`;
     const val = "deleteStudent2";
     res.render("teacherProfile", { email, forename, surname, val, resultString });
 
@@ -644,7 +638,6 @@ app.post('/confirmDeleteStudent', async (req, res) => {
 
     db.run("BEGIN TRANSACTION");
 
-    // Get student ID using the provided function
     const studentID = await getStudentIDByEmail(studentEmail);
 
     if (!studentID) {
@@ -657,6 +650,7 @@ app.post('/confirmDeleteStudent', async (req, res) => {
     db.run("DELETE FROM Prog_Planes WHERE ProgressID = ?", [progressID]);
     db.run("DELETE FROM Progress WHERE StudentID = ?", [studentID]);
     db.run("DELETE FROM Student WHERE Email = ?", [studentEmail]);
+    db.run("DELETE FROM Classcode WHERE StudentID = ?", [studentID]);
 
     console.log(`Deletion successful for student with email: ${studentEmail}`);
     db.run("COMMIT");
@@ -671,7 +665,6 @@ app.post('/confirmDeleteStudent', async (req, res) => {
   }
 });
 
-
 app.get('/addStudent', (req, res) => {
   console.log("Add student")
   const val = "addStudent";
@@ -682,98 +675,105 @@ app.get('/addStudent', (req, res) => {
 });
 
 app.post('/addStudentForm', async (req, res) => {
-  const CurrentUserEmail = req.session.currentUserEmail;
+  const currentUserEmail = req.session.currentUserEmail;
   const forename = req.session.forename;
   const surname = req.session.surname;
-  const classcode = req.session.classcode;
+  const teacherID = req.session.CurrentId;
   const email = req.body.email;
   const password = req.body.password;
   const confirmPassword = req.body.confirmPassword;
   const accountType = "student"; 
 
-
   if (!email || email.indexOf('@') === -1) {
     const resultString = 'Invalid email format. Please enter a valid email address.';
-    res.render("teacherProfile", { email : CurrentUserEmail, forename, surname, val : "addStudent", resultString });
+    res.render("teacherProfile", { email: currentUserEmail, forename, surname, val: "addStudent", resultString });
     return;
   }
 
   if (password !== confirmPassword) {
     const resultString = 'Passwords do not match. Please enter matching passwords.';
-    res.render("teacherProfile", { email : CurrentUserEmail, forename, surname, val : "addStudent", resultString });
+    res.render("teacherProfile", { email: currentUserEmail, forename, surname, val: "addStudent", resultString });
     return;
   }
 
   try {
-    console.log(password);
     const hashedPassword = await hashPassword(password);
 
     db.run(
-      'INSERT INTO Student(Forename, Surname, Email, Password, ClasscodeID) VALUES (?, ?, ?, ?, ?)',
-      [req.body.forename, req.body.surname, email, hashedPassword, classcode],
-      function (err) {
+      'INSERT INTO Student(Forename, Surname, Email, Password) VALUES (?, ?, ?, ?)',
+      [req.body.forename, req.body.surname, email, hashedPassword],
+      async function (err) {
         if (err) {
           const resultString = err.message.includes('UNIQUE constraint failed') ?
             'The email already exists' : err.message;
-            res.render("teacherProfile", { email : CurrentUserEmail, forename, surname, val : "addStudent", resultString });
-          } else {
-          console.log(`New ${accountType} has been added`);
-          const resultString = `New ${accountType} has been added`
+          res.render("teacherProfile", { email: currentUserEmail, forename, surname, val: "addStudent", resultString });
+        } else {
+          const studentID = this.lastID;
           ProgessDatabase(this.lastID);
-          res.render("teacherProfile", { email : CurrentUserEmail, forename, surname, val : "addStudent", resultString });
+
+          db.run(
+            'INSERT INTO Classcode(TeacherID, StudentID) VALUES (?, ?)',
+            [teacherID, studentID],
+            function (err) {
+              if (err) {
+                console.error(err);
+                const resultString = 'An error occurred while adding the student.';
+                res.render("teacherProfile", { email: currentUserEmail, forename, surname, val: "addStudent", resultString });
+              } else {
+                const resultString = `New ${accountType} has been added`
+                res.render("teacherProfile", { email: currentUserEmail, forename, surname, val: "addStudent", resultString });
+              }
+            }
+          );
         }
       }
     );
   } catch (err) {
     console.error(err);
-    const resultString =err.message.includes('UNIQUE constraint failed') ?
+    const resultString = err.message.includes('UNIQUE constraint failed') ?
       'The email already exists' : err.message;
-      res.render("teacherProfile", { email : CurrentUserEmail, forename, surname, val : "addStudent", resultString });
-    }
+    res.render("teacherProfile", { email: currentUserEmail, forename, surname, val: "addStudent", resultString });
+  }
 });
 
 app.post('/changeStudentPassword', async (req, res) => {
   const email = req.body.email;
-  const currentUserEmail = req.session.currentUserEmail
+  const currentUserEmail = req.session.currentUserEmail;
   const newStudentPassword = req.body.newPassword;
   const confirmNewStudentPassword = req.body.confirmPassword;
   const val = "changeStudentPassword";
-  var resultString;
+  let resultString;
 
   try {
-    const studentClasscodeID = await getClasscodeIDByEmail(email);
+    const user = await getUserByEmailWithClasscode(email, 'Student', req.session.CurrentId);
 
-    if (studentClasscodeID !== req.session.classcode) {
-      resultString = 'You do not have permission to change this students password.';
-      res.render("teacherProfile", { email : currentUserEmail, forename: req.session.forename, surname: req.session.surname, val, resultString });
-      return;
+    if (!user) {
+      resultString = 'No student found with the provided email or the student is not linked to you.';
+      return res.render("teacherProfile", { email: currentUserEmail, forename: req.session.forename, surname: req.session.surname, val, resultString });
     }
-
-    const user = await getUserByEmail(email, 'Student');
 
     console.log('Stored Hashed Password:', user.Password);
 
     if (newStudentPassword !== confirmNewStudentPassword) {
       resultString = 'New password and confirm new password do not match';
-      res.render("teacherProfile", { email : currentUserEmail, forename: req.session.forename, surname: req.session.surname, val, resultString });
-      return;
+      return res.render("teacherProfile", { email: currentUserEmail, forename: req.session.forename, surname: req.session.surname, val, resultString });
     }
 
     const hashedNewPassword = await hashPassword(newStudentPassword);
-    db.get(`UPDATE Student SET Password = ? WHERE Email = ?`, [hashedNewPassword, email], function (err) {
+    db.run(`UPDATE Student SET Password = ? WHERE Email = ?`, [hashedNewPassword, email], function (err) {
       if (err) {
-        resultString = err.message;
-        res.render("teacherProfile", { email : currentUserEmail, forename: req.session.forename, surname: req.session.surname, val, resultString });
+        console.error(err);
+        resultString = 'An error occurred while changing the password';
       } else {
         console.log('Password has been successfully changed');
-        res.render("teacherProfile", { email : currentUserEmail, forename: req.session.forename, surname: req.session.surname, val, resultString: "Sucessful!" });
+        resultString = 'Password successfully changed!';
       }
+      res.render("teacherProfile", { email: currentUserEmail, forename: req.session.forename, surname: req.session.surname, val, resultString });
     });
   } catch (err) {
     console.error(err);
     resultString = 'An error occurred while changing the password';
-    console.error(resultString);
-    res.render("teacherProfile", { email : currentUserEmail, forename: req.session.forename, surname: req.session.surname, val, resultString });
+    res.render("teacherProfile", { email: currentUserEmail, forename: req.session.forename, surname: req.session.surname, val, resultString });
   }
 });
 
@@ -830,35 +830,20 @@ const hashPassword = (password) => {
   });
 };
 
-function getAllStudentDataForTeacher(email) {
-  return getTeacherID(email)
-    .then((teacherID) => {
-      return getClasscodeIDByTeacherID(teacherID);
-    })
-    .then((classcodeID) => {
-      return new Promise((resolve, reject) => {
-        if (!classcodeID) {
-          reject(new Error('ClasscodeID not found for the teacher.'));
-          return;
+async function getStudentsByTeacherID(teacherID) {
+  return new Promise((resolve, reject) => {
+    db.all(
+      'SELECT Forename, Surname, Email FROM Student WHERE StudentID IN (SELECT StudentID FROM Classcode WHERE TeacherID = ?)',
+      [teacherID],
+      (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rows);
         }
-
-        db.all(
-          'SELECT Forename, Surname, Email FROM Student WHERE ClasscodeID = ?',
-          [classcodeID],
-          (err, rows) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(rows);
-            }
-          }
-        );
-      });
-    })
-    .catch((error) => {
-      console.error('Error:', error);
-      throw error;
-    });
+      }
+    );
+  });
 }
 
 function ProgessDatabase(StudentID) {
@@ -961,25 +946,24 @@ function updateProgTables(tableName, email, correct) {
     });
 }
 
-function createClassCode(){
-  characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-  code = ''
-  for (var i = 0; i< 6; i++){
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    code += characters[randomIndex];
-  }
-  return code;
-}
-
-function setClassCode(classCode, email){
-  db.run('UPDATE Student SET ClasscodeID = ? WHERE Email = ?',
-  [classCode, email], function (err) {
-    if (err) {
+function setUpClassLink(TeacherID, email) {
+  getStudentIDByEmail(email)
+    .then((studentID) => {
+      if (studentID !== null) {
+        db.run('INSERT INTO Classcode (TeacherID, StudentID) VALUES (?, ?)', [TeacherID, studentID], function (err) {
+          if (err) {
+            console.error(err);
+          } else {
+            console.log("Link made");
+          }
+        });
+      } else {
+        console.log("Student not found for the given email");
+      }
+    })
+    .catch((err) => {
       console.error(err);
-    } else {
-      console.log("classcode added")
-    }
-  });
+    });
 }
 
 function checkPassword(enteredPassword, storedPassword) {
@@ -1075,64 +1059,85 @@ function getTeacherID(email) {
   });
 }
 
-async function getAllStudentsLinkedToTeacher(email) {
-  return getTeacherID(email)
-    .then((teacherID) => {
-      if (teacherID) {
-        return getClasscodeIDByTeacherID(teacherID)
-          .then((classcodeID) => getStudentsByClasscodeID(classcodeID))
-          
-          .catch((err) => {
-            console.log("no students liked")
-            throw err;
-          });
+function getUserByEmailWithClasscode(email, tableName, teacherID) {
+  return new Promise((resolve, reject) => {
+    const query = `SELECT * FROM ${tableName} WHERE Email = ?`;
+
+    db.get(query, [email], (err, row) => {
+      if (err) {
+        reject(err);
       } else {
-        return null;
+        if (row) {
+          const studentID = row.StudentID; // Assuming you have StudentID in the row
+          db.get('SELECT * FROM Classcode WHERE TeacherID = ? AND StudentID = ?', [teacherID, studentID], (err, classcodeRow) => {
+            if (err) {
+              reject(err);
+            } else {
+              if (classcodeRow) {
+                resolve(row); // Student is linked to the teacher
+              } else {
+                resolve(null); // Student is not linked to the teacher
+              }
+            }
+          });
+        } else {
+          resolve(null); 
+        }
       }
-    })
-    .catch((err) => {
-      console.error(err);
-      throw err;
     });
-}
-
-async function getClasscodeIDByTeacherID(teacherID) {
-  return new Promise((resolve, reject) => {
-    db.get(
-      'SELECT ClasscodeID FROM Classcode WHERE TeacherID = ?',
-      [teacherID],
-      (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row ? row.ClasscodeID : null);
-        }
-      }
-    );
   });
 }
 
-async function getClasscodeIDByEmail(studentEmail) {
-  return new Promise((resolve, reject) => {
-    db.get(
-      'SELECT ClasscodeID FROM Student WHERE Email = ?',
-      [studentEmail],
-      (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row ? row.ClasscodeID : null);
-        }
-      }
-    );
-  });
+async function getAllStudentsLinkedToTeacher(email) {
+  try {
+    const teacherID = await getTeacherID(email);
+    if (!teacherID) {
+      console.log("Teacher not found with email:", email);
+      return [];
+    }
+
+    const classcodeRows = await getClasscodesByTeacherID(teacherID);
+    if (!classcodeRows || classcodeRows.length === 0) {
+      console.log("No classcodes found for teacher:", teacherID);
+      return [];
+    }
+    console.log(classcodeRows);
+    const studentIDs = classcodeRows.map(row => row.StudentID);
+    console.log(studentIDs);
+    const students = await getStudentsByIDs(studentIDs);
+
+    return students;
+  } catch (error) {
+    console.error("Error retrieving students linked to teacher:", error);
+    throw error;
+  }
 }
 
-function getStudentsByClasscodeID(classcodeID) {
+async function getClasscodesByTeacherID(teacherID) {
   return new Promise((resolve, reject) => {
     db.all(
-      'SELECT Forename, Surname, StudentID FROM Student WHERE ClasscodeID = ?',
-      [classcodeID],
+      'SELECT StudentID FROM Classcode WHERE TeacherID = ?',
+      [teacherID],
+      (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          console.log(rows);
+          resolve(rows);
+        }
+      }
+    );
+  });
+}
+
+async function getStudentsByIDs(studentIDs) {
+  return new Promise((resolve, reject) => {
+    const placeholders = studentIDs.map(() => '?').join(', ');
+    const query = `SELECT Forename, Surname, StudentID FROM Student WHERE StudentID IN (${placeholders})`;
+
+    db.all(
+      query,
+      studentIDs,
       (err, rows) => {
         if (err) {
           reject(err);
@@ -1237,3 +1242,5 @@ server.listen(3000,function(){
     console.log("Server listening on port: 3000");
     console.log("Server is running on 'http://localhost:3000/'");
 });
+
+
