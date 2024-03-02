@@ -35,7 +35,7 @@ app.use(session({
   saveUninitialized: true,
 }));
 
-var db = new sqlite3.Database('./database/UserAccounts');
+var db = new sqlite3.Database('./database/UserAccounts.sqlite');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.set('view engine', 'ejs');
@@ -1242,3 +1242,5 @@ server.listen(3000,function(){
     console.log("Server listening on port: 3000");
     console.log("Server is running on 'http://localhost:3000/'");
 });
+
+

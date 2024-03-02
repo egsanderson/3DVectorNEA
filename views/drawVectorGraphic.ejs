@@ -1,14 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Metadata -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Title -->
     <title>Drawing graphics</title>
+    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../public/images/favicon.png">
+    <!-- CSS Stylesheet -->
     <link rel="stylesheet" href="../public/css/style.css">
+    <!-- JavaScript -->
     <script src="../public/js/main.js"></script>
 
+    <!-- Internal CSS Styles -->
     <style>
+        /* Styles for container */
         #container {
             position: relative;
             width: 100%;
@@ -18,6 +25,7 @@
             border-top: 1px solid #333;
         }
 
+        /* Styles for the canvas */
         #threejs-canvas {
             flex: 1;
             width: 100%;
@@ -25,15 +33,17 @@
             border-top: 1px solid #333;
         }
 
+        /* Styles for vector input labels */
         .vector-input label {
             margin-right: 5px;
         }
 
+        /* Styles for input container */
         #input-container {
             padding: 10px;
         }
 
-        /* Modal styles */
+        /* Styles for modal */
         .modal {
             display: none;
             position: fixed;
@@ -48,6 +58,7 @@
             padding-top: 60px;
         }
 
+        /* Styles for modal content */
         .modal-content {
             background-color: #fefefe;
             margin: 5% auto;
@@ -58,9 +69,13 @@
     </style>
 </head>
 <body>
+    <!-- Conditional rendering based on role -->
     [/ if (role == "Student") { /]
+        <!-- Student Navigation -->
         <nav id="studentNav">
+            <!-- List of links -->
             <ul>
+                <!-- Dropdown menu for questions -->
                 <li class="dropdown">
                     <a href="#" id="questionsButton">Questions</a>
                     <div class="dropdown-content">
@@ -69,8 +84,11 @@
                         <a href="#" id="planesButton">Planes</a>
                     </div>
                 </li>
+                <!-- Link for student progress -->
                 <li><a href="#" id="StudentprogressButton">Progress</a></li>
+                <!-- Link to draw vector -->
                 <li><a href="#" id="drawButton">Draw Vector</a></li>
+                <!-- Dropdown menu for profile -->
                 <li class="dropdown">
                     <a href="#" id="profileButton">Profile - [/- email /]</a>
                     <div class="dropdown-content">
@@ -81,10 +99,15 @@
             </ul>
         </nav>
     [/ } else { /]
+        <!-- Teacher Navigation -->
         <nav id="teacherNav">
+            <!-- List of links -->
             <ul>
+                <!-- Link for class progress -->
                 <li><a href="#" id="ClassprogressButton">Class Progress</a></li>
+                <!-- Link to draw vector -->
                 <li><a href="#" id="drawButton">Draw Vector</a></li>
+                <!-- Dropdown menu for profile -->
                 <li class="dropdown">
                     <a href="#" id="profileButton">Profile - [/- email /]</a>
                     <div class="dropdown-content">
@@ -100,14 +123,17 @@
             </ul>
         </nav>
     [/ } /]
+    <!-- Buttons to open modals -->
     <br>
     <button onclick="showAddLineModal()">Add Line</button>
     <br>
+    <!-- Add Line Modal -->
     <div id="addLineModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeAddLineModal()">&times;</span>
             <h2>Add Line</h2>
             <h3>The form is done by r = (x,y,z) + p(a,b,c)</h3>
+            <!-- Form to add a line -->
             <form id="addLineForm">
                 <label for="xValue">X:</label>
                 <input type="number" id="xValue" placeholder="--" required>
@@ -121,16 +147,20 @@
                 <input type="number" id="bValue" placeholder="--" required>
                 <label for="cValue">c:</label>
                 <input type="number" id="cValue" placeholder="--" required>
+                <!-- Button to add line -->
                 <button type="button" onclick="addLine()">Add Line</button>
             </form>
         </div>
     </div>
+    <!-- Add Plane Button -->
     <br>
     <button onclick="showAddPlaneModal()">Add Plane</button>
+    <!-- Add Plane Modal -->
     <div id="addPlaneModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeAddPlaneModal()">&times;</span>
             <h2>Add Plane</h2>
+            <!-- Form to add a plane -->
             <form id="addPlaneForm">
                 <label for="nxValue">X:</label>
                 <input type="number" id="nxValue" placeholder="--" required>
@@ -140,15 +170,19 @@
                 <input type="number" id="nzValue" placeholder="--" required>
                 <label for="pValue">p:</label>
                 <input type="number" id="pValue" placeholder="--" required>
+                <!-- Button to add plane -->
                 <button type="button" onclick="addPlane()">Add Plane</button>
             </form>
         </div>
     </div>
+    <!-- Add Point Button -->
     <button onclick="showAddPointModal()">Add Point</button> 
+    <!-- Add Point Modal -->
     <div id="addPointModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeAddPointModal()">&times;</span>
             <h2>Add Point</h2>
+            <!-- Form to add a point -->
             <form id="addPointForm">
                 <label for="xPoint">X:</label>
                 <input type="number" id="xPoint" placeholder="--" required>
@@ -156,11 +190,13 @@
                 <input type="number" id="yPoint" placeholder="--" required>
                 <label for="zPoint">Z:</label>
                 <input type="number" id="zPoint" placeholder="--" required>
+                <!-- Button to add point -->
                 <button type="button" onclick="addPoint()">Add Point</button>
             </form>
         </div>
     </div>
     <br><br>
+    <!-- Controls for camera -->
     <div id="camera-controls">
         <label>X:</label>
         <button onclick="changeCameraPosition('x', '+')">+</button>
@@ -175,18 +211,24 @@
         <button onclick="changeCameraPosition('z', '-')">-</button>
     </div>
     <br>
+    <!-- Display camera coordinates -->
     <div id="camera-coordinates"></div>
     <br>
+    <!-- Button to recenter camera -->
     <button onclick="recenterCamera()">Re-center</button>
     <br>
+    <!-- Container for 3D scene -->
     <div id="container">
         <div id="threejs-canvas"></div>
     </div>
 
+    <!-- Three.js library -->
     <script src="../public/js/three.js"></script>
     <script>
+        // JavaScript code for Three.js application
         class ThreeJSApp {
             constructor() {
+                // Initialize scene, camera, and renderer
                 this.scene = new THREE.Scene();
                 this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
                 this.renderer = new THREE.WebGLRenderer({ alpha: true });
@@ -194,7 +236,8 @@
                 document.getElementById('threejs-canvas').appendChild(this.renderer.domElement);
                 this.camera.position.z = 5;
             }
-    
+
+            // Method to create a line
             createLine(x1, y1, z1, x2, y2, z2, color) {
                 const material = new THREE.LineBasicMaterial({ color, linewidth: 2 });
                 const points = [new THREE.Vector3(x1, y1, z1), new THREE.Vector3(x2, y2, z2)];
@@ -203,109 +246,140 @@
                 this.scene.add(line);
                 this.renderer.render(this.scene, this.camera);
             }
+
+            // Method to create a plane
             createPlane(nx, ny, nz, p) {
-            const normal = new THREE.Vector3(nx, ny, nz).normalize();
-            const constant = p / normal.length();
+                const normal = new THREE.Vector3(nx, ny, nz).normalize();
+                const constant = p / normal.length();
 
-            const planeGeometry = new THREE.PlaneGeometry(200, 200, 1, 1);
-            const planeMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide });
-            const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+                const planeGeometry = new THREE.PlaneGeometry(200, 200, 1, 1);
+                const planeMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide });
+                const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
 
-            planeMesh.position.copy(normal.clone().multiplyScalar(constant));
+                planeMesh.position.copy(normal.clone().multiplyScalar(constant));
 
-            this.scene.add(planeMesh);
-            this.renderer.render(this.scene, this.camera);
+                this.scene.add(planeMesh);
+                this.renderer.render(this.scene, this.camera);
             }
-    
+
+            // Method to create axes
             createAxes() {
                 const axesHelper = new THREE.AxesHelper(5);
                 this.scene.add(axesHelper);
                 this.renderer.render(this.scene, this.camera);
             }
+
+            // Method to add a point
+            addPoint(x, y, z) {
+                const pointGeometry = new THREE.SphereGeometry(0.2, 6.4, 6.4);
+                const pointMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff }); 
+                const pointMesh = new THREE.Mesh(pointGeometry, pointMaterial);
+
+                pointMesh.position.set(x, y, z);
+                this.scene.add(pointMesh);
+                this.renderer.render(this.scene, this.camera);
+
+                updateCameraCoordinates();
+            }
         }
-    
+
+        // Function to show add line modal
         function showAddLineModal() {
             document.getElementById('addLineModal').style.display = 'block';
         }
-    
+
+        // Function to close add line modal
         function closeAddLineModal() {
             document.getElementById('addLineModal').style.display = 'none';
         }
+
+        // Function to show add point modal
         function showAddPointModal() {
             document.getElementById('addPointModal').style.display = 'block';
         }
 
+        // Function to close add point modal
         function closeAddPointModal() {
             document.getElementById('addPointModal').style.display = 'none';
         }
 
+        // Function to add a line
         function addLine() {
+            // Retrieve values from form inputs
             const x = parseFloat(document.getElementById('xValue').value) || 0;
             const y = parseFloat(document.getElementById('yValue').value) || 0;
             const z = parseFloat(document.getElementById('zValue').value) || 0;
             const a = parseFloat(document.getElementById('aValue').value) || 1;
             const b = parseFloat(document.getElementById('bValue').value) || 0;
             const c = parseFloat(document.getElementById('cValue').value) || 0;
-    
+
+            // Calculate line coordinates
             const maxX = Math.min(100, x + 100 * a);
             const maxY = Math.min(100, y + 100 * b);
             const maxZ = Math.min(100, z + 100 * c);
             const minX = Math.max(-100, x - 100 * a);
             const minY = Math.max(-100, y - 100 * b);
             const minZ = Math.max(-100, z - 100 * c);
-    
+
+            // Create line in Three.js scene
             app.createLine(minX, minY, minZ, maxX, maxY, maxZ, 0xff0000);
             closeAddLineModal();
         }
+
+        // Function to show add plane modal
         function showAddPlaneModal() {
             document.getElementById('addPlaneModal').style.display = 'block';
         }
 
+        // Function to close add plane modal
         function closeAddPlaneModal() {
             document.getElementById('addPlaneModal').style.display = 'none';
         }
 
+        // Function to add a plane
         function addPlane() {
+            // Retrieve values from form inputs
             const nx = parseFloat(document.getElementById('nxValue').value) || 0;
             const ny = parseFloat(document.getElementById('nyValue').value) || 0;
             const nz = parseFloat(document.getElementById('nzValue').value) || 0;
             const p = parseFloat(document.getElementById('pValue').value) || 0;
 
+            // Create plane in Three.js scene
             app.createPlane(nx, ny, nz, p);
             closeAddPlaneModal();
         }
-    
+
+        // Function to initialize Three.js application
         function initThreeJSApp() {
             const app = new ThreeJSApp();
             window.app = app;
-    
+
             app.camera.position.set(5, 5, 5);
             app.camera.lookAt(0, 0, 0);
-    
+
             app.createAxes();
         }
+
+        // Function to add a point
         function addPoint() {
+            // Retrieve values from form inputs
             const x = parseFloat(document.getElementById('xPoint').value) || 0;
             const y = parseFloat(document.getElementById('yPoint').value) || 0;
             const z = parseFloat(document.getElementById('zPoint').value) || 0;
 
-            const pointGeometry = new THREE.SphereGeometry(0.2, 6.4, 6.4);
-            const pointMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff }); 
-            const pointMesh = new THREE.Mesh(pointGeometry, pointMaterial);
-
-            pointMesh.position.set(x, y, z);
-            app.scene.add(pointMesh);
-            app.renderer.render(app.scene, app.camera);
+            // Add point to Three.js scene
+            app.addPoint(x, y, z);
 
             closeAddPointModal();
-            updateCameraCoordinates();
         }
 
+        // Function to update camera coordinates display
         function updateCameraCoordinates() {
             const coordinatesDiv = document.getElementById('camera-coordinates');
             coordinatesDiv.textContent = `Camera Coordinates: (x, y, z) = (${app.camera.position.x.toFixed(2)}, ${app.camera.position.y.toFixed(2)}, ${app.camera.position.z.toFixed(2)})`;
         }
 
+        // Function to change camera position
         function changeCameraPosition(axis, direction) {
             const step = 1; 
             switch (axis) {
@@ -325,6 +399,7 @@
             updateCameraCoordinates();
         }
 
+        // Function to recenter camera
         function recenterCamera() {
             app.camera.position.set(5, 5, 5);
             app.camera.lookAt(0, 0, 0);
@@ -332,11 +407,12 @@
             updateCameraCoordinates();
         }
 
-    
+        // Event listener for when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
             initThreeJSApp();
             updateCameraCoordinates();
         });
+
     </script>
 </body>
 </html>
