@@ -5,6 +5,33 @@
         <link rel="stylesheet" href="../public/css/style.css">
         <link rel="icon" type="image/x-icon" href="../public/images/favicon.png">
         <script src="../public/js/main.js"></script>
+        <style>
+            .hint-popup {
+                display: none;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                border: 3px solid #f1f1f1;
+                z-index: 10;
+                max-width: 400px;
+                padding: 10px;
+                background-color: white;
+            }
+
+            .hint-image {
+                width: 100%;
+                height: auto;
+                display: none;
+            }
+
+            .close-hint {
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                cursor: pointer;
+            }
+        </style>
     </head>
     <body>
         <nav id="studentNav">
@@ -50,6 +77,7 @@
                 <label for="userInput">Enter Coordinates:</label>
                 <input type="text" id="userInput" name="userInput" required>
                 <button type="submit">Check Answer</button>
+                <button type="button" onclick="showHint()">Hint</button>
             </form>
         [/ } else if (val == false) { /]
             <h3>Convert a vector plane equation to cartesian form</h3>
@@ -65,9 +93,26 @@
                 <label for="userInput">Enter Cartesian Form:</label>
                 <input type="text" id="userInput" name="userInput" required>
                 <button type="submit">Check Answer</button>
+                <button type="button" onclick="showHint()">Hint</button>
             </form>
         [/ } /]
 
+        <div id="hint-popup" class="hint-popup">
+            <span class="close-hint" onclick="closeHint()">&times;</span>
+            <img class="hint-image" src="../public/images/planeHint.png" alt="Hint Image">
+        </div>
+
+        <script>
+            function showHint() {
+                document.querySelector('.hint-image').style.display = 'block';
+                document.querySelector('.hint-popup').style.display = 'block';
+            }
+
+            function closeHint() {
+                document.querySelector('.hint-image').style.display = 'none';
+                document.querySelector('.hint-popup').style.display = 'none';
+            }
+        </script>
     </body>
 </html>
 
